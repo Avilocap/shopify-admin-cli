@@ -61,6 +61,37 @@ Available commands and capabilities:
 
 Legacy `accessToken` is also supported as an optional compatibility path for older apps.
 
+## Quickstart
+
+Install the CLI globally:
+
+```bash
+npm install -g shopfleet
+```
+
+Add a store with Shopify Dev Dashboard credentials:
+
+```bash
+shopfleet config add main \
+  --domain main-store.myshopify.com \
+  --client-id your-client-id \
+  --client-secret your-client-secret
+```
+
+Set it as the default store and verify the connection:
+
+```bash
+shopfleet config set-default main
+shopfleet config list
+shopfleet shop info
+```
+
+Notes:
+
+- `--domain` must be the Shopify admin domain in the `*.myshopify.com` format.
+- Use `--token` only for legacy setups that already rely on an Admin API access token.
+- If you do not set a default store, pass `--store <alias>` to each command.
+
 ## Install dependencies
 
 ```bash
