@@ -1,7 +1,7 @@
 {
   "name": "shopfleet",
   "version": "0.1.0",
-  "description": "Private multi-store Shopify CLI",
+  "description": "Multi-store Shopify CLI",
   "type": "module",
   "bin": {
     "shopfleet": "./dist/index.js"
