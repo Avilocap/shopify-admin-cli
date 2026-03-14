@@ -1,0 +1,7 @@
+interface:
+  display_name: "Shopfleet CLI"
+  short_description: "Operate and extend the local Shopify CLI safely."
+  default_prompt: "Use $shopfleet-cli to inspect, run, or extend the Shopfleet Shopify CLI in this repository."
+
+policy:
+  allow_implicit_invocation: true
