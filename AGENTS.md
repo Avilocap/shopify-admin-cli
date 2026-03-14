@@ -42,6 +42,9 @@ The active MVP covers:
 - `collections list`
 - `collections get`
 - `collections products`
+- `discounts list`
+- `discounts get`
+- `discounts create`
 
 ## Expected structure
 

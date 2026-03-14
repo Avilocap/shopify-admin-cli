@@ -34,6 +34,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `collections list`
 - `collections get`
 - `collections products`
+- `discounts list`
+- `discounts get`
+- `discounts create`
 - migration from `~/.store-manager/stores.json` to `~/.shopfleet/stores.json`
 - agent-friendly `--help` for implemented commands
 
@@ -255,9 +258,9 @@ Flags: `--limit`, `--after`, `--sort`, `--reverse`, `--query`, `--type smart|cus
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `discounts list` | `discountNodes` query | List discounts |
-| pending | `discounts get <id>` | `discountNode` query | Discount detail |
-| pending | `discounts create` | `discountCodeBasicCreate` | Create discount code |
+| done | `discounts list` | `discountNodes` query | List discounts |
+| done | `discounts get <id>` | `discountNode` query | Discount detail |
+| done | `discounts create` | `discountCodeBasicCreate` | Create discount code |
 
 Create flags: `--title`, `--code`, `--starts`, `--ends`, `--usage-limit`, `--percentage`, `--amount`, `--once-per-customer`
 
@@ -352,4 +355,3 @@ Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `
 - `customers list`
 - `customers get`
 - `inventory adjust`
-- `discounts list`

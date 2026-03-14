@@ -34,6 +34,9 @@ MVP in progress with focus on:
 - `collections list`
 - `collections get`
 - `collections products`
+- `discounts list`
+- `discounts get`
+- `discounts create`
 
 ## Requirements
 
@@ -180,6 +183,9 @@ shopfleet inventory locations --limit 10
 shopfleet collections list --limit 10
 shopfleet collections get 1234567890 --format table
 shopfleet collections products 1234567890 --limit 10
+shopfleet discounts list --limit 10
+shopfleet discounts get gid://shopify/DiscountNode/1234567890 --format table
+shopfleet discounts create --title "Spring 10" --code SPRING10 --starts 2026-03-14 --percentage 10
 ```
 
 ## API version
@@ -323,3 +329,25 @@ shopfleet collections list --query 'title:miniatura'
 
 `collections get` accepts a Shopify collection GID or numeric collection ID.
 `collections products` lists products inside the target collection with manual pagination.
+
+## Discounts
+
+`discounts list` supports raw Shopify discount search syntax and a small set of convenience filters:
+
+```bash
+shopfleet discounts list --status active --method code
+shopfleet discounts list --query 'title:"Spring" method:automatic' --sort starts-at
+```
+
+`discounts get` accepts a Shopify discount node GID returned by `discounts list` or `discounts create`.
+Numeric discount IDs are not supported because Shopify discount node IDs are type-specific.
+
+`discounts create` currently covers one narrow write path:
+
+```bash
+shopfleet discounts create --title "Spring 10" --code SPRING10 --starts 2026-03-14 --percentage 10
+shopfleet discounts create --title "VIP 20" --code VIP20 --starts 2026-03-14T09:00:00Z --ends 2026-03-31T23:59:59Z --amount 20 --once-per-customer
+```
+
+It creates a basic discount code that applies to all buyers and all items.
+Pass exactly one of `--percentage` or `--amount`.
