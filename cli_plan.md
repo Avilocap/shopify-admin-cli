@@ -21,6 +21,10 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `orders get`
 - `orders transactions`
 - `orders cancel`
+- `customers list`
+- `customers get`
+- `customers search`
+- `customers orders`
 - `collections list`
 - `collections get`
 - `collections products`
@@ -211,12 +215,12 @@ Flags: `--status`, `--financial-status`, `--fulfillment-status`, `--from`, `--to
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `customers list` | `customers` query | List customers |
-| pending | `customers get <id>` | `customer` query | Customer detail |
-| pending | `customers search <query>` | `customers` + filter | Search by name, email, or phone |
-| pending | `customers orders <id>` | `customer.orders` | Orders for a customer |
+| done | `customers list` | `customers` query | List customers |
+| done | `customers get <id>` | `customer` query | Customer detail |
+| done | `customers search <query>` | `customers` + filter | Search by name, email, or phone |
+| done | `customers orders <id>` | `customer.orders` | Orders for a customer |
 
-Flags: `--limit`, `--cursor`, `--sort`, `--reverse`
+Flags: `--limit`, `--after`, `--sort`, `--reverse`
 
 ### 4.4 Inventory (3 commands)
 

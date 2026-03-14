@@ -21,6 +21,10 @@ MVP in progress with focus on:
 - `orders get`
 - `orders transactions`
 - `orders cancel`
+- `customers list`
+- `customers get`
+- `customers search`
+- `customers orders`
 - `collections list`
 - `collections get`
 - `collections products`
@@ -98,6 +102,10 @@ shopfleet orders list --limit 10
 shopfleet orders get 1234567890 --format table
 shopfleet orders transactions 1234567890
 shopfleet orders cancel 1234567890 --reason customer --refund-method original --force
+shopfleet customers list --limit 10
+shopfleet customers search maria@example.com
+shopfleet customers get 1234567890 --format table
+shopfleet customers orders 1234567890 --limit 10
 shopfleet collections list --limit 10
 shopfleet collections get 1234567890 --format table
 shopfleet collections products 1234567890 --limit 10
@@ -153,6 +161,25 @@ shopfleet orders cancel 1234567890 --reason customer --refund-method original --
 ```
 
 `orders cancel` was not executed against a real order during validation, to avoid changing production order data.
+
+## Customers
+
+`customers list` supports raw Shopify customer search syntax:
+
+```bash
+shopfleet customers list --query "state:enabled" --sort updated-at
+shopfleet customers list --query "tag:VIP" --reverse
+```
+
+`customers search` builds a search query over first name, last name, email, and phone.
+`customers get` accepts a Shopify customer GID or numeric customer ID.
+`customers orders` reads the customer's `orders` connection directly.
+
+```bash
+shopfleet customers search maria
+shopfleet customers get gid://shopify/Customer/1234567890
+shopfleet customers orders 1234567890 --sort processed-at
+```
 
 ## Collections
 

@@ -32,6 +32,10 @@ The active MVP covers:
 - `orders get`
 - `orders transactions`
 - `orders cancel`
+- `customers list`
+- `customers get`
+- `customers search`
+- `customers orders`
 - `collections list`
 - `collections get`
 - `collections products`
