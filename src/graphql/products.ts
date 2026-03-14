@@ -57,6 +57,46 @@ export const PRODUCT_GET_QUERY = `
   }
 `;
 
+export const PRODUCT_GET_WITH_MEDIA_QUERY = `
+  query ProductGetWithMedia($id: ID!) {
+    product(id: $id) {
+      id
+      title
+      handle
+      descriptionHtml
+      status
+      vendor
+      productType
+      tags
+      totalInventory
+      media(first: 10) {
+        nodes {
+          id
+          alt
+          mediaContentType
+          ... on MediaImage {
+            image {
+              altText
+              url
+              width
+              height
+            }
+          }
+        }
+      }
+      variants(first: 10) {
+        nodes {
+          id
+          title
+          sku
+          price
+          inventoryQuantity
+        }
+      }
+    }
+  }
+`;
+
 export const PRODUCT_BY_HANDLE_QUERY = `
   query ProductByHandle($handle: String!) {
     productByHandle(handle: $handle) {
@@ -68,6 +108,46 @@ export const PRODUCT_BY_HANDLE_QUERY = `
       productType
       tags
       totalInventory
+      variants(first: 10) {
+        nodes {
+          id
+          title
+          sku
+          price
+          inventoryQuantity
+        }
+      }
+    }
+  }
+`;
+
+export const PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY = `
+  query ProductByHandleWithMedia($handle: String!) {
+    productByHandle(handle: $handle) {
+      id
+      title
+      handle
+      descriptionHtml
+      status
+      vendor
+      productType
+      tags
+      totalInventory
+      media(first: 10) {
+        nodes {
+          id
+          alt
+          mediaContentType
+          ... on MediaImage {
+            image {
+              altText
+              url
+              width
+              height
+            }
+          }
+        }
+      }
       variants(first: 10) {
         nodes {
           id

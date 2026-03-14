@@ -4,6 +4,7 @@ import {
   buildProductCreateInput,
   buildProductUpdateInput,
   buildProductSearchQuery,
+  extractProductImages,
   normalizeProductId,
   parseProductStatus,
   parseProductSortKey,
@@ -125,5 +126,54 @@ describe("buildProductUpdateInput", () => {
       id: "gid://shopify/Product/1",
       title: "Nuevo titulo",
     });
+  });
+});
+
+describe("extractProductImages", () => {
+  it("keeps only image media and falls back to media alt text", () => {
+    expect(
+      extractProductImages({
+        handle: "my-product",
+        id: "gid://shopify/Product/1",
+        media: {
+          nodes: [
+            {
+              alt: "Primary image",
+              id: "gid://shopify/MediaImage/1",
+              image: {
+                altText: null,
+                height: 1200,
+                url: "https://cdn.example.com/image-1.jpg",
+                width: 1200,
+              },
+              mediaContentType: "IMAGE",
+            },
+            {
+              alt: "Video preview",
+              id: "gid://shopify/Video/2",
+              image: null,
+              mediaContentType: "VIDEO",
+            },
+          ],
+        },
+        productType: "Accesorio",
+        status: "ACTIVE",
+        tags: [],
+        title: "My product",
+        totalInventory: 5,
+        variants: {
+          nodes: [],
+        },
+        vendor: "Pichardo",
+      }),
+    ).toEqual([
+      {
+        altText: "Primary image",
+        height: 1200,
+        id: "gid://shopify/MediaImage/1",
+        url: "https://cdn.example.com/image-1.jpg",
+        width: 1200,
+      },
+    ]);
   });
 });

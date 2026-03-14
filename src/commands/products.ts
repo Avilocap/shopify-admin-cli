@@ -5,9 +5,11 @@ import { ShopifyClient } from "../client.js";
 import { resolveStore } from "../config.js";
 import {
   PRODUCT_BY_HANDLE_QUERY,
+  PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY,
   PRODUCT_CREATE_MUTATION,
   PRODUCT_DELETE_MUTATION,
   PRODUCT_GET_QUERY,
+  PRODUCT_GET_WITH_MEDIA_QUERY,
   PRODUCT_UPDATE_MUTATION,
   PRODUCTS_LIST_QUERY,
 } from "../graphql/products.js";
@@ -35,8 +37,12 @@ const PRODUCT_SORT_KEYS = [
 type ProductSortKey = (typeof PRODUCT_SORT_KEYS)[number];
 
 interface ProductDetails {
+  descriptionHtml?: string | null;
   handle: string;
   id: string;
+  media?: {
+    nodes: ProductMediaNode[];
+  };
   productType: string;
   status: string;
   tags: string[];
@@ -46,6 +52,26 @@ interface ProductDetails {
     nodes: ProductVariantItem[];
   };
   vendor: string;
+}
+
+interface ProductMediaNode {
+  alt: string | null;
+  id: string;
+  image?: {
+    altText: string | null;
+    height: number | null;
+    url: string;
+    width: number | null;
+  } | null;
+  mediaContentType: string;
+}
+
+interface ProductImageItem {
+  altText: string;
+  height: number | null;
+  id: string;
+  url: string;
+  width: number | null;
 }
 
 interface ProductsListResponse {
@@ -82,6 +108,7 @@ interface ProductsListOptions {
 interface ProductGetOptions {
   format: OutputFormat;
   handle?: boolean;
+  includeMedia?: boolean;
 }
 
 interface ProductSearchQueryOptions {
@@ -222,6 +249,10 @@ Notes:
     .description("Get a product by GID, numeric ID or handle")
     .argument("<idOrHandle>", "Product GID, numeric ID or handle")
     .option("--handle", "Treat the argument as a product handle")
+    .option(
+      "--include-media",
+      "Include descriptionHtml and up to 10 product images with metadata",
+    )
     .option("--format <format>", "table or json", "json")
     .addHelpText(
       "after",
@@ -229,10 +260,12 @@ Notes:
 Examples:
   shopfleet products get gid://shopify/Product/1234567890
   shopfleet products get 1234567890 --format table
+  shopfleet products get 1234567890 --include-media
   shopfleet products get my-product-handle --handle
 
 Notes:
   Without --handle, the argument must be a Shopify product GID or numeric product ID.
+  Use --include-media to include descriptionHtml and up to 10 product images.
       `,
     )
     .action(
@@ -243,13 +276,15 @@ Notes:
         const product = options.handle
           ? (
               await client.query<ProductByHandleResponse>({
-                query: PRODUCT_BY_HANDLE_QUERY,
+                query: options.includeMedia
+                  ? PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY
+                  : PRODUCT_BY_HANDLE_QUERY,
                 variables: { handle: idOrHandle },
               })
             ).productByHandle
           : (
               await client.query<ProductGetResponse>({
-                query: PRODUCT_GET_QUERY,
+                query: options.includeMedia ? PRODUCT_GET_WITH_MEDIA_QUERY : PRODUCT_GET_QUERY,
                 variables: { id: normalizeProductId(idOrHandle) },
               })
             ).product;
@@ -263,7 +298,7 @@ Notes:
           return;
         }
 
-        printProductDetails(product);
+        printProductDetails(product, Boolean(options.includeMedia));
       },
     );
 
@@ -478,7 +513,7 @@ async function runProductsList(
   }
 }
 
-function printProductDetails(product: ProductDetails): void {
+function printProductDetails(product: ProductDetails, includeMedia: boolean): void {
   printTable(
     [
       {
@@ -490,6 +525,12 @@ function printProductDetails(product: ProductDetails): void {
         productType: product.productType,
         tags: product.tags,
         totalInventory: product.totalInventory,
+        ...(includeMedia
+          ? {
+              descriptionHtml: product.descriptionHtml ?? "",
+              imageCount: extractProductImages(product).length,
+            }
+          : {}),
       },
     ],
     [
@@ -501,8 +542,20 @@ function printProductDetails(product: ProductDetails): void {
       "productType",
       "tags",
       "totalInventory",
+      ...(includeMedia ? ["descriptionHtml", "imageCount"] : []),
     ],
   );
+
+  if (!includeMedia) {
+    return;
+  }
+
+  const productImages = extractProductImages(product);
+
+  if (productImages.length > 0) {
+    process.stdout.write("\nImages\n");
+    printTable(productImages, ["id", "url", "altText", "width", "height"]);
+  }
 
   if (product.variants.nodes.length > 0) {
     process.stdout.write("\nVariants\n");
@@ -528,7 +581,21 @@ function printProductMutationResult(
     return;
   }
 
-  printProductDetails(product);
+  printProductDetails(product, false);
+}
+
+export function extractProductImages(product: ProductDetails): ProductImageItem[] {
+  return (product.media?.nodes ?? [])
+    .filter((media): media is ProductMediaNode & { image: NonNullable<ProductMediaNode["image"]> } => {
+      return media.mediaContentType === "IMAGE" && Boolean(media.image?.url);
+    })
+    .map((media) => ({
+      altText: media.image.altText ?? media.alt ?? "",
+      height: media.image.height,
+      id: media.id,
+      url: media.image.url,
+      width: media.image.width,
+    }));
 }
 
 async function resolveProductReference(

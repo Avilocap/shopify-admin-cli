@@ -243,6 +243,7 @@ shopfleet products list --query 'tag:"miniatura" status:active' --sort updated-a
 ```
 
 `products search` uses Shopify's default search and sorts by relevance.
+`products get` returns the basic product fields by default. Add `--include-media` to include `descriptionHtml` and up to 10 product images as URLs plus metadata.
 
 Write commands are also available:
 
