@@ -125,7 +125,7 @@ Examples:
 
 Notes:
   --type maps to Shopify collection_type filtering.
-  Pagination is manual for now. Reuse the returned cursor with --after.
+  Pagination is manual. Reuse the returned cursor with --after.
       `,
     )
     .action(async (options: CollectionsListOptions, command: Command) => {

@@ -4,7 +4,7 @@ Operational guide for agents working in this repository.
 
 ## Goal
 
-Keep a small, readable, and easy-to-extend private Shopify CLI.
+Keep a small, readable, and easy-to-extend Shopify CLI.
 
 ## Principles
 
@@ -14,9 +14,9 @@ Keep a small, readable, and easy-to-extend private Shopify CLI.
 - keep behavior explicit and names clear
 - do not open new areas until the current vertical is closed
 
-## Current vertical
+## Supported surface
 
-The active MVP covers:
+Supported commands and capabilities:
 
 - multi-store configuration
 - Shopify authentication with `clientId` and `clientSecret`
@@ -75,13 +75,13 @@ The active MVP covers:
 - pin a default `SHOPIFY_API_VERSION` and allow override through env
 - support both `clientId/clientSecret` and `accessToken` in config
 - never print secrets in logs or tables
-- keep analytics Phase 1 on `shopifyqlQuery` and read-only
+- keep analytics on `shopifyqlQuery` and read-only
 - do not introduce traffic, conversion, abandonment, marketing analytics, webhooks, or bulk operations unless explicitly requested
 
 ## Documentation rules
 
 - all repository documentation must be written in English
-- keep `README.md`, `AGENTS.md`, help text, plans, and any new docs in English only
+- keep `README.md`, `AGENTS.md`, help text, and any new docs in English only
 - if you edit existing documentation that is not in English, translate it to English in the same change
 - write help for agents, not for humans relying on implicit context
 - each command must clearly explain what input it expects

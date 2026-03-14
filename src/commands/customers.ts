@@ -183,7 +183,7 @@ Examples:
 
 Notes:
   --query uses Shopify customer search syntax directly.
-  Pagination is manual for now. Reuse the returned cursor with --after.
+  Pagination is manual. Reuse the returned cursor with --after.
       `,
     )
     .action(async (options: CustomersListOptions, command: Command) => {

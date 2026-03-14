@@ -197,7 +197,7 @@ Examples:
 
 Notes:
   --query uses Shopify discount search syntax directly.
-  Pagination is manual for now. Reuse the returned cursor with --after.
+  Pagination is manual. Reuse the returned cursor with --after.
       `,
     )
     .action(async (options: DiscountsListOptions, command: Command) => {

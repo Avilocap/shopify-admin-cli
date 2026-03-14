@@ -167,7 +167,7 @@ Examples:
 
 Notes:
   --query uses Shopify page search syntax directly.
-  Pagination is manual for now. Reuse the returned cursor with --after.
+  Pagination is manual. Reuse the returned cursor with --after.
       `,
     )
     .action(async (options: PagesListOptions, command: Command) => {
@@ -243,7 +243,7 @@ Examples:
 
 Notes:
   --query uses Shopify blog search syntax directly.
-  Pagination is manual for now. Reuse the returned cursor with --after.
+  Pagination is manual. Reuse the returned cursor with --after.
       `,
     )
     .action(async (options: BlogsListOptions, command: Command) => {

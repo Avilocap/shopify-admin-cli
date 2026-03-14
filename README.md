@@ -1,12 +1,10 @@
 # Shopfleet
 
-Disclaimer: this project was developed using 100% AI.
+Command-line interface for managing Shopify stores from the terminal.
 
-CLI for managing Shopify stores from the terminal.
+## Features
 
-## Current status
-
-MVP in progress with focus on:
+Available commands and capabilities:
 
 - multi-store configuration
 - authentication against Shopify Admin GraphQL
@@ -130,29 +128,9 @@ Shopfleet uses `clientId` and `clientSecret` for new apps. It requests an Admin 
 
 Recommended Admin API scopes:
 
-- `write_products`
-- `write_orders`
-- `read_all_orders`
-- `write_customers`
-- `write_inventory`
-- `write_discounts`
-- `read_assigned_fulfillment_orders`
-- `write_assigned_fulfillment_orders`
-- `read_merchant_managed_fulfillment_orders`
-- `write_merchant_managed_fulfillment_orders`
-- `read_third_party_fulfillment_orders`
-- `write_third_party_fulfillment_orders`
-- `write_gift_cards`
-- `write_content`
-- `write_draft_orders`
-- `write_metaobject_definitions`
-- `write_metaobjects`
-- `write_online_store_navigation`
-- `read_price_rules`
-- `read_reports`
-- `read_locations`
-- `read_markets`
-- `read_themes`
+```text
+write_products, write_orders, read_all_orders, write_customers, write_inventory, write_discounts, read_assigned_fulfillment_orders, write_assigned_fulfillment_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders, read_third_party_fulfillment_orders, write_third_party_fulfillment_orders, write_gift_cards, write_content, write_draft_orders, write_metaobject_definitions, write_metaobjects, write_online_store_navigation, read_price_rules, read_reports, read_locations, read_markets, read_themes
+```
 
 Then register the store in the CLI:
 
@@ -243,8 +221,8 @@ shopfleet products update my-product --handle --status draft --new-handle my-upd
 shopfleet products delete my-updated-product --handle --force
 ```
 
-Current write scope is limited to top-level product fields.
-Variants, media, and options stay out of scope here.
+Product write commands support top-level product fields.
+Variants, media, and options are not modified by these commands.
 Inventory operations live under the dedicated `inventory` command group.
 
 ## Orders
@@ -266,12 +244,10 @@ shopfleet orders cancel 1234567890 --force
 shopfleet orders cancel 1234567890 --reason customer --refund-method original --notify-customer --force
 ```
 
-`orders cancel` was not executed against a real order during validation, to avoid changing production order data.
-
 ## Analytics
 
-Analytics Phase 1 is implemented on top of ShopifyQL through Admin GraphQL.
-It is read-only and designed for agent consumption.
+Analytics is implemented on top of ShopifyQL through Admin GraphQL.
+It is read-only.
 
 Available commands:
 
@@ -290,7 +266,6 @@ JSON output is normalized for machines and includes:
 - parse errors
 - metadata about dataset, row count, and store
 
-Phase 1 intentionally excludes traffic, conversion, abandonment, marketing, and customer analytics.
 
 ## Customers
 
@@ -439,8 +414,6 @@ shopfleet fulfillment tracking gid://shopify/Fulfillment/255858046 --tracking-ur
 `fulfillment tracking` expects a fulfillment GID or numeric fulfillment ID.
 At least one of `--tracking-number`, `--tracking-url`, or `--carrier` is required.
 
-Fulfillment write commands were implemented from the current Shopify Admin GraphQL contract but were not executed against a real store here, to avoid changing production fulfillment data.
-
 ## Financial
 
 `financial transactions` returns the transaction history for the target order.
@@ -455,8 +428,6 @@ shopfleet financial refund gid://shopify/Order/1234567890 --line-items gid://sho
 `financial refund` expects an order GID or numeric ID.
 `--line-items` expects Shopify line item GIDs or numeric line item IDs in the form `<line-item-id>:<quantity>`.
 Provide `--line-items`, `--shipping-amount`, or both.
-`financial refund` was not executed against a real order during validation, to avoid changing production financial data.
-
 `financial summary` reads matching orders and calculates totals locally:
 
 ```bash
@@ -490,7 +461,7 @@ shopfleet discounts list --query 'title:"Spring" method:automatic' --sort starts
 `discounts get` accepts a Shopify discount node GID returned by `discounts list` or `discounts create`.
 Numeric discount IDs are not supported because Shopify discount node IDs are type-specific.
 
-`discounts create` currently covers one narrow write path:
+`discounts create` creates a basic discount code with a focused set of options:
 
 ```bash
 shopfleet discounts create --title "Spring 10" --code SPRING10 --starts 2026-03-14 --percentage 10

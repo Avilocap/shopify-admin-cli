@@ -170,7 +170,7 @@ Examples:
 
 Notes:
   --query uses Shopify search syntax directly.
-  Pagination is manual for now. Reuse the returned cursor with --after.
+  Pagination is manual. Reuse the returned cursor with --after.
       `,
     )
     .action(async (options: ProductsListOptions, command: Command) => {
@@ -286,7 +286,7 @@ Examples:
   shopfleet products create --title "Test product" --vendor Pichardo --type Accesorio --tags test,cli
 
 Notes:
-  This command only sets top-level product fields. Variants, media and inventory stay out of scope for now.
+  This command only sets top-level product fields. Use the inventory commands for stock changes.
       `,
     )
     .action(async (options: ProductMutationOptions, command: Command) => {
