@@ -1,6 +1,6 @@
 ---
 name: shopfleet-cli
-description: Use when working with the Shopfleet/store-manager Shopify CLI in this repository: exploring commands, running the local CLI safely, updating command contracts, debugging command behavior, or adding new CLI features.
+description: "Use when working with the Shopfleet/store-manager Shopify CLI in this repository: exploring commands, running the local CLI safely, updating command contracts, debugging command behavior, or adding new CLI features."
 ---
 
 # Shopfleet CLI
