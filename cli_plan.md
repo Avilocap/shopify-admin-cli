@@ -28,6 +28,10 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `gift-cards list`
 - `gift-cards get`
 - `gift-cards create`
+- `pages list`
+- `pages create`
+- `blogs list`
+- `blogs create-article`
 - `financial transactions`
 - `financial refund`
 - `financial summary`
@@ -317,10 +321,14 @@ Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `pages list` | `pages` query (REST/GQL) | List pages |
-| pending | `pages create` | `pageCreate` | Create page |
-| pending | `blogs list` | `blogs` query | List blogs |
-| pending | `blogs create-article` | `articleCreate` | Create blog article |
+| done | `pages list` | `pages` query | List pages |
+| done | `pages create` | `pageCreate` | Create page |
+| done | `blogs list` | `blogs` query | List blogs |
+| done | `blogs create-article` | `articleCreate` | Create blog article |
+
+List flags: `--limit`, `--after`, `--query`, `--sort`, `--reverse`
+Page create flags: `--title`, `--body`, `--handle`, `--template`, `--publish-date`, `--hidden`
+Article create flags: `--blog-id`, `--title`, `--author-name`, `--body`, `--summary`, `--handle`, `--tags`, `--template`, `--publish-date`, `--hidden`
 
 ### 4.11 Webhooks (3 commands)
 

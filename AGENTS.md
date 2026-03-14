@@ -39,6 +39,10 @@ The active MVP covers:
 - `gift-cards list`
 - `gift-cards get`
 - `gift-cards create`
+- `pages list`
+- `pages create`
+- `blogs list`
+- `blogs create-article`
 - `financial transactions`
 - `financial refund`
 - `financial summary`

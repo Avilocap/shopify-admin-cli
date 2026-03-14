@@ -28,6 +28,10 @@ MVP in progress with focus on:
 - `gift-cards list`
 - `gift-cards get`
 - `gift-cards create`
+- `pages list`
+- `pages create`
+- `blogs list`
+- `blogs create-article`
 - `financial transactions`
 - `financial refund`
 - `financial summary`
@@ -187,6 +191,10 @@ shopfleet customers orders 1234567890 --limit 10
 shopfleet gift-cards list --limit 10
 shopfleet gift-cards get 1234567890 --format table
 shopfleet gift-cards create --value 25
+shopfleet pages list --limit 10
+shopfleet pages create --title "About us" --body "<p>Who we are</p>"
+shopfleet blogs list --limit 10
+shopfleet blogs create-article --blog-id 1234567890 --title "Spring release" --author-name "Store Team"
 shopfleet financial transactions 1234567890
 shopfleet financial refund 1234567890 --line-items 987654321:1 --force
 shopfleet financial summary --from 2026-03-01 --to 2026-03-14
@@ -326,6 +334,44 @@ Notes:
 - `--expires` expects `YYYY-MM-DD`.
 - `--recipient-email` must match an existing Shopify customer email because Shopify recipient data uses customer IDs.
 - Notifications are disabled by default. Pass `--notify` to let Shopify send them.
+
+## Content
+
+`pages list` supports raw Shopify page search syntax:
+
+```bash
+shopfleet pages list --query "title:about" --sort updated-at
+shopfleet pages list --query "published_status:published" --format json
+```
+
+`pages create` creates an online store page with a small explicit field set:
+
+```bash
+shopfleet pages create --title "About us"
+shopfleet pages create --title "Shipping policy" --handle shipping-policy --body "<p>Ships in 24h</p>"
+shopfleet pages create --title "Coming soon" --hidden
+```
+
+`blogs list` supports raw Shopify blog search syntax:
+
+```bash
+shopfleet blogs list --query "title:news" --sort handle
+shopfleet blogs list --query "handle:journal" --format json
+```
+
+`blogs create-article` creates an article inside an existing blog:
+
+```bash
+shopfleet blogs create-article --blog-id 1234567890 --title "Spring release" --author-name "Store Team"
+shopfleet blogs create-article --blog-id gid://shopify/Blog/1234567890 --title "Launch day" --author-name "Store Team" --tags launch,news
+shopfleet blogs create-article --blog-id 1234567890 --title "Coming soon" --author-name "Store Team" --hidden
+```
+
+Notes:
+
+- `--blog-id` expects a Shopify blog GID or numeric blog ID returned by `blogs list`.
+- `--publish-date` expects a full ISO 8601 date-time.
+- Do not combine `--hidden` with `--publish-date`.
 
 ## Inventory
 
