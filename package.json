@@ -1,6 +1,6 @@
 {
   "name": "shopfleet",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Multi-store Shopify CLI",
   "type": "module",
   "bin": {
