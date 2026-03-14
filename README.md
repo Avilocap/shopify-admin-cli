@@ -21,6 +21,9 @@ MVP in progress with focus on:
 - `orders get`
 - `orders transactions`
 - `orders cancel`
+- `collections list`
+- `collections get`
+- `collections products`
 
 ## Requirements
 
@@ -95,6 +98,9 @@ shopfleet orders list --limit 10
 shopfleet orders get 1234567890 --format table
 shopfleet orders transactions 1234567890
 shopfleet orders cancel 1234567890 --reason customer --refund-method original --force
+shopfleet collections list --limit 10
+shopfleet collections get 1234567890 --format table
+shopfleet collections products 1234567890 --limit 10
 ```
 
 ## API version
@@ -147,3 +153,15 @@ shopfleet orders cancel 1234567890 --reason customer --refund-method original --
 ```
 
 `orders cancel` was not executed against a real order during validation, to avoid changing production order data.
+
+## Collections
+
+`collections list` supports simple filtering and sorting:
+
+```bash
+shopfleet collections list --type custom --sort updated-at --reverse
+shopfleet collections list --query 'title:miniatura'
+```
+
+`collections get` accepts a Shopify collection GID or numeric collection ID.
+`collections products` lists products inside the target collection with manual pagination.

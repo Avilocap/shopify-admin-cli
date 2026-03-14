@@ -21,6 +21,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `orders get`
 - `orders transactions`
 - `orders cancel`
+- `collections list`
+- `collections get`
+- `collections products`
 - migration from `~/.store-manager/stores.json` to `~/.shopfleet/stores.json`
 - agent-friendly `--help` for implemented commands
 
@@ -36,12 +39,16 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `orders list`
 - `orders get`
 - `orders transactions`
+- `collections list`
+- `collections get`
+- `collections products`
 
 Notes:
 
 - product write operations were tested with an isolated temporary product
 - the temporary product was deleted at the end of the validation flow
 - order cancellation is implemented but was not executed against a real order
+- collections commands were validated in read-only mode against a real store
 
 ### In progress
 
@@ -225,11 +232,11 @@ Adjust flags: `--item-id`, `--location-id`, `--quantity`
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `collections list` | `collections` query | List collections |
-| pending | `collections get <id>` | `collection` query | Collection detail |
-| pending | `collections products <id>` | `collection.products` | Products in a collection |
+| done | `collections list` | `collections` query | List collections |
+| done | `collections get <id>` | `collection` query | Collection detail |
+| done | `collections products <id>` | `collection.products` | Products in a collection |
 
-Flags: `--limit`, `--cursor`, `--type smart|custom`
+Flags: `--limit`, `--after`, `--sort`, `--reverse`, `--query`, `--type smart|custom`
 
 ### 4.6 Discounts (3 commands)
 

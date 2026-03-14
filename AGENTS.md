@@ -32,6 +32,9 @@ The active MVP covers:
 - `orders get`
 - `orders transactions`
 - `orders cancel`
+- `collections list`
+- `collections get`
+- `collections products`
 
 ## Expected structure
 
