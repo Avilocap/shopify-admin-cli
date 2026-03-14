@@ -43,6 +43,10 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `fulfillment list`
 - `fulfillment create`
 - `fulfillment tracking`
+- `analytics custom`
+- `analytics sales`
+- `analytics products`
+- `analytics overview`
 - migration from `~/.store-manager/stores.json` to `~/.shopfleet/stores.json`
 - agent-friendly `--help` for implemented commands
 
@@ -61,6 +65,10 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `collections list`
 - `collections get`
 - `collections products`
+- `analytics custom`
+- `analytics sales`
+- `analytics products`
+- `analytics overview`
 
 Notes:
 
@@ -70,6 +78,7 @@ Notes:
 - financial refund is implemented but was not executed against a real order
 - collections commands were validated in read-only mode against a real store
 - gift card commands are implemented but not yet validated against a real sandbox store
+- analytics Phase 1 was validated against the real store through ShopifyQL
 
 ### In progress
 
@@ -321,6 +330,24 @@ Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `
 | pending | `webhooks create` | `webhookSubscriptionCreate` | Create webhook |
 | pending | `webhooks delete <id>` | `webhookSubscriptionDelete` | Delete webhook |
 
+### 4.12 Analytics (Phase 1, pure analytics) (4 commands)
+
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| done | `analytics custom` | `shopifyqlQuery` | Run a raw ShopifyQL query and return structured tabular data |
+| done | `analytics sales` | `shopifyqlQuery` | Sales-focused preset for revenue, orders, averages, and trend analysis |
+| done | `analytics products` | `shopifyqlQuery` | Product-focused preset for top products, units sold, and product performance |
+| done | `analytics overview` | `shopifyqlQuery` | Executive snapshot of the store for agents: sales, orders, AOV, and key trends |
+
+Core flags: `--since`, `--until`, `--during`, `--timeseries`, `--group-by`, `--limit`, `--compare-to`, `--format`
+
+Notes:
+
+- Phase 1 is intentionally ShopifyQL-first and read-only.
+- The goal is agent consumption, so output should be normalized for machine use: query, columns, rows, parse errors, and metadata.
+- `analytics custom` is the core primitive. The other commands are presets built on top of it.
+- Customer analytics, traffic, conversion, abandonment, and marketing are intentionally deferred until the data model is clearer.
+
 ## 5. Cross-cutting behavior
 
 ### Current
@@ -336,5 +363,3 @@ Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `
 - automatic `--all` pagination
 - verbose GraphQL output
 - destructive confirmations beyond the current `--force` guard
-
-

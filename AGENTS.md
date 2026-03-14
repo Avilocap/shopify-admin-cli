@@ -51,6 +51,10 @@ The active MVP covers:
 - `fulfillment list`
 - `fulfillment create`
 - `fulfillment tracking`
+- `analytics custom`
+- `analytics sales`
+- `analytics products`
+- `analytics overview`
 
 ## Expected structure
 
@@ -67,7 +71,8 @@ The active MVP covers:
 - pin a default `SHOPIFY_API_VERSION` and allow override through env
 - support both `clientId/clientSecret` and `accessToken` in config
 - never print secrets in logs or tables
-- do not introduce analytics, webhooks, or bulk operations in the MVP
+- keep analytics Phase 1 on `shopifyqlQuery` and read-only
+- do not introduce traffic, conversion, abandonment, marketing analytics, webhooks, or bulk operations unless explicitly requested
 
 ## Documentation rules
 

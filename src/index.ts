@@ -3,6 +3,7 @@
 import chalk from "chalk";
 import { Command } from "commander";
 
+import { registerAnalyticsCommands } from "./commands/analytics.js";
 import { registerCollectionCommands } from "./commands/collections.js";
 import { registerConfigCommands } from "./commands/config.js";
 import { registerCustomerCommands } from "./commands/customers.js";
@@ -25,6 +26,7 @@ program
 
 registerConfigCommands(program);
 registerShopCommands(program);
+registerAnalyticsCommands(program);
 registerProductCommands(program);
 registerOrderCommands(program);
 registerCustomerCommands(program);

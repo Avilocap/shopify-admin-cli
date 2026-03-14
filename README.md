@@ -43,6 +43,10 @@ MVP in progress with focus on:
 - `discounts list`
 - `discounts get`
 - `discounts create`
+- `analytics custom`
+- `analytics sales`
+- `analytics products`
+- `analytics overview`
 
 ## Requirements
 
@@ -198,6 +202,10 @@ shopfleet fulfillment tracking 255858046 --tracking-number 1Z9999999999999999
 shopfleet discounts list --limit 10
 shopfleet discounts get gid://shopify/DiscountNode/1234567890 --format table
 shopfleet discounts create --title "Spring 10" --code SPRING10 --starts 2026-03-14 --percentage 10
+shopfleet analytics custom --query "FROM sales SHOW total_sales DURING last_month"
+shopfleet analytics sales --during last_week --timeseries day --compare-to previous_period
+shopfleet analytics products --during last_month --limit 10
+shopfleet analytics overview --during last_month --format json
 ```
 
 ## API version
@@ -251,6 +259,30 @@ shopfleet orders cancel 1234567890 --reason customer --refund-method original --
 ```
 
 `orders cancel` was not executed against a real order during validation, to avoid changing production order data.
+
+## Analytics
+
+Analytics Phase 1 is implemented on top of ShopifyQL through Admin GraphQL.
+It is read-only and designed for agent consumption.
+
+Available commands:
+
+```bash
+shopfleet analytics custom --query "FROM sales SHOW total_sales DURING last_month"
+shopfleet analytics sales --during last_week --timeseries day --compare-to previous_period
+shopfleet analytics products --during last_month --group-by product_title,product_vendor --limit 10
+shopfleet analytics overview --during last_month --format json
+```
+
+JSON output is normalized for machines and includes:
+
+- the executed query
+- returned columns
+- returned rows
+- parse errors
+- metadata about dataset, row count, and store
+
+Phase 1 intentionally excludes traffic, conversion, abandonment, marketing, and customer analytics.
 
 ## Customers
 
