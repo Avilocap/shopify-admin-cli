@@ -45,6 +45,7 @@ Use command help to confirm exact input, but these rules are important:
 
 - `products get|update|delete` accept a product GID or numeric product ID by default. Use `--handle` to treat the argument as a handle.
 - `products get --include-media` adds `descriptionHtml` and up to 10 product images with metadata. Without that flag, keep the response lightweight.
+- `products create|update` accept optional `--seo-title` and `--seo-description` values that map to Shopify product SEO fields.
 - `orders get|transactions|cancel` accept an order GID or numeric order ID.
 - `customers get|orders` accept a customer GID or numeric customer ID.
 - `gift-cards get` accepts a gift card GID or numeric ID.

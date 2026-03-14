@@ -44,6 +44,10 @@ interface ProductDetails {
     nodes: ProductMediaNode[];
   };
   productType: string;
+  seo?: {
+    description: string | null;
+    title: string | null;
+  } | null;
   status: string;
   tags: string[];
   title: string;
@@ -123,6 +127,8 @@ interface ProductMutationOptions {
   description?: string;
   format: OutputFormat;
   handle?: string;
+  seoDescription?: string;
+  seoTitle?: string;
   status?: string;
   tags?: string;
   title?: string;
@@ -308,6 +314,8 @@ Notes:
     .requiredOption("--title <title>", "Product title")
     .option("--description <html>", "HTML description")
     .option("--handle <handle>", "Product handle")
+    .option("--seo-title <title>", "SEO title override")
+    .option("--seo-description <text>", "SEO description override")
     .option("--vendor <vendor>", "Vendor")
     .option("--type <productType>", "Product type")
     .option("--tags <tags>", "Comma-separated tags")
@@ -319,9 +327,11 @@ Notes:
 Examples:
   shopfleet products create --title "Test product" --status draft
   shopfleet products create --title "Test product" --vendor Pichardo --type Accesorio --tags test,cli
+  shopfleet products create --title "Test product" --seo-title "Buy Test product online" --seo-description "Short search snippet"
 
 Notes:
-  This command only sets top-level product fields. Use the inventory commands for stock changes.
+  This command sets top-level product fields, including optional SEO title and SEO description.
+  Use the inventory commands for stock changes.
       `,
     )
     .action(async (options: ProductMutationOptions, command: Command) => {
@@ -352,6 +362,8 @@ Notes:
     .option("--title <title>", "Product title")
     .option("--description <html>", "HTML description")
     .option("--new-handle <handle>", "New product handle")
+    .option("--seo-title <title>", "SEO title override")
+    .option("--seo-description <text>", "SEO description override")
     .option("--vendor <vendor>", "Vendor")
     .option("--type <productType>", "Product type")
     .option("--tags <tags>", "Comma-separated tags")
@@ -364,6 +376,7 @@ Examples:
   shopfleet products update 1234567890 --title "Nuevo titulo"
   shopfleet products update my-handle --handle --status draft --tags test,cli
   shopfleet products update 1234567890 --new-handle nuevo-handle
+  shopfleet products update 1234567890 --seo-title "Nuevo SEO title" --seo-description "Nueva SEO description"
 
 Notes:
   Use --handle only to resolve the target product by its current handle.
@@ -643,6 +656,7 @@ export function buildProductCreateInput(
     descriptionHtml: options.description,
     handle: options.handle,
     productType: options.type,
+    seo: buildSeoInput(options),
     status: parseProductStatus(options.status),
     tags: options.tags !== undefined ? parseTags(options.tags) : undefined,
     title: options.title,
@@ -659,6 +673,7 @@ export function buildProductUpdateInput(
     handle: options.newHandle,
     id,
     productType: options.type,
+    seo: buildSeoInput(options),
     status: parseProductStatus(options.status),
     tags: options.tags !== undefined ? parseTags(options.tags) : undefined,
     title: options.title,
@@ -772,6 +787,17 @@ function quoteSearchValue(value: string): string {
   }
 
   return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+}
+
+function buildSeoInput(
+  options: Pick<ProductMutationOptions, "seoDescription" | "seoTitle">,
+): Record<string, unknown> | undefined {
+  const seo = omitUndefined({
+    description: options.seoDescription,
+    title: options.seoTitle,
+  });
+
+  return Object.keys(seo).length > 0 ? seo : undefined;
 }
 
 function omitUndefined(input: Record<string, unknown>): Record<string, unknown> {

@@ -87,6 +87,8 @@ describe("buildProductCreateInput", () => {
         description: "<p>Hola</p>",
         format: "json",
         handle: "test-product",
+        seoDescription: "Short search snippet",
+        seoTitle: "Buy Test product online",
         status: "draft",
         tags: "test,cli",
         title: "Test product",
@@ -97,6 +99,10 @@ describe("buildProductCreateInput", () => {
       descriptionHtml: "<p>Hola</p>",
       handle: "test-product",
       productType: "Accesorio",
+      seo: {
+        description: "Short search snippet",
+        title: "Buy Test product online",
+      },
       status: "DRAFT",
       tags: ["test", "cli"],
       title: "Test product",
@@ -119,11 +125,15 @@ describe("buildProductUpdateInput", () => {
       buildProductUpdateInput("gid://shopify/Product/1", {
         format: "json",
         newHandle: "nuevo-handle",
+        seoTitle: "Nuevo SEO title",
         title: "Nuevo titulo",
       }),
     ).toEqual({
       handle: "nuevo-handle",
       id: "gid://shopify/Product/1",
+      seo: {
+        title: "Nuevo SEO title",
+      },
       title: "Nuevo titulo",
     });
   });
@@ -157,6 +167,7 @@ describe("extractProductImages", () => {
           ],
         },
         productType: "Accesorio",
+        seo: null,
         status: "ACTIVE",
         tags: [],
         title: "My product",

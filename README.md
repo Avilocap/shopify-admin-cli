@@ -249,11 +249,13 @@ Write commands are also available:
 
 ```bash
 shopfleet products create --title "Test product" --vendor Pichardo --type Accesorio --tags test,cli
+shopfleet products create --title "Test product" --seo-title "Buy Test product online" --seo-description "Short search snippet"
 shopfleet products update my-product --handle --status draft --new-handle my-updated-product
+shopfleet products update 1234567890 --seo-title "New SEO title" --seo-description "Updated search snippet"
 shopfleet products delete my-updated-product --handle --force
 ```
 
-Product write commands support top-level product fields.
+Product write commands support top-level product fields, including optional `--seo-title` and `--seo-description`.
 Variants, media, and options are not modified by these commands.
 Inventory operations live under the dedicated `inventory` command group.
 

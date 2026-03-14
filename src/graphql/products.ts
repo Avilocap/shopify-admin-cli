@@ -39,6 +39,10 @@ export const PRODUCT_GET_QUERY = `
       id
       title
       handle
+      seo {
+        title
+        description
+      }
       status
       vendor
       productType
@@ -64,6 +68,10 @@ export const PRODUCT_GET_WITH_MEDIA_QUERY = `
       title
       handle
       descriptionHtml
+      seo {
+        title
+        description
+      }
       status
       vendor
       productType
@@ -103,6 +111,10 @@ export const PRODUCT_BY_HANDLE_QUERY = `
       id
       title
       handle
+      seo {
+        title
+        description
+      }
       status
       vendor
       productType
@@ -128,6 +140,10 @@ export const PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY = `
       title
       handle
       descriptionHtml
+      seo {
+        title
+        description
+      }
       status
       vendor
       productType
@@ -168,6 +184,10 @@ export const PRODUCT_CREATE_MUTATION = `
         id
         title
         handle
+        seo {
+          title
+          description
+        }
         status
         vendor
         productType
@@ -189,6 +209,10 @@ export const PRODUCT_UPDATE_MUTATION = `
         id
         title
         handle
+        seo {
+          title
+          description
+        }
         status
         vendor
         productType
