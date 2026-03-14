@@ -87,6 +87,46 @@ Example:
 }
 ```
 
+## Create a custom app for a store
+
+Starting on January 1, 2026, Shopify no longer lets you create new "legacy custom apps" from a store admin. New custom apps must be created and managed in Shopify Dev Dashboard.
+
+For each store:
+
+1. Open the store admin.
+2. Go to `Settings > Apps`.
+3. Click `Develop apps`.
+4. Click `Build apps in Dev Dashboard`.
+5. In Dev Dashboard, click `Create app`.
+6. Open the `Versions` tab and create the first version.
+7. If the app is not embedded in the Shopify admin, set `App URL` to `https://shopify.dev/apps/default-app-home`.
+8. Choose a recent `Webhooks API` version.
+9. Add the Admin API scopes you need.
+10. Release the version.
+11. From `Home`, install the app on that store.
+12. Open the app `Settings` and copy `Client ID` and `Client secret`.
+
+Shopfleet uses `clientId` and `clientSecret` for new apps. It requests an Admin API `access_token` from `POST /admin/oauth/access_token` with the `client_credentials` grant when needed. Tokens from this flow expire after 24 hours, so the CLI requests a fresh token again when required.
+
+For a minimal read-only product and inventory setup, request only:
+
+- `read_products`
+- `read_inventory`
+
+If you want to use other command groups later, add the extra scopes those commands require before installing or updating the app version.
+
+Then register the store in the CLI:
+
+```bash
+shopfleet config add main --domain main-store.myshopify.com --client-id your-client-id --client-secret your-client-secret
+```
+
+Notes:
+
+- `--domain` must be the Shopify admin domain in the `*.myshopify.com` format.
+- `clientId` and `clientSecret` are the values from the app `Settings` page in Dev Dashboard.
+- Legacy `accessToken` support remains available only for older apps that already use that model.
+
 ## First commands
 
 ```bash
