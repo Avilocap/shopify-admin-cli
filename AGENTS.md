@@ -24,11 +24,15 @@ The active MVP covers:
 - `shop info`
 - `products list`
 - `products get`
+- `products search`
+- `products create`
+- `products update`
+- `products delete`
 
 ## Expected structure
 
 - `src/index.ts`: CLI entry point
-- `src/config.ts`: read and write `~/.store-manager/stores.json`
+- `src/config.ts`: read and write `~/.shopfleet/stores.json`, migrating from `~/.store-manager/stores.json` when needed
 - `src/client.ts`: token exchange and GraphQL calls
 - `src/commands/*`: subcommand definitions
 - `src/graphql/*`: pure GraphQL queries

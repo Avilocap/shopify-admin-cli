@@ -5,10 +5,14 @@ import { ShopifyClient } from "../client.js";
 import { resolveStore } from "../config.js";
 import {
   PRODUCT_BY_HANDLE_QUERY,
+  PRODUCT_CREATE_MUTATION,
+  PRODUCT_DELETE_MUTATION,
   PRODUCT_GET_QUERY,
+  PRODUCT_UPDATE_MUTATION,
   PRODUCTS_LIST_QUERY,
 } from "../graphql/products.js";
 import type {
+  GraphQlUserError,
   OutputFormat,
   PageInfo,
   ProductListItem,
@@ -88,8 +92,57 @@ interface ProductSearchQueryOptions {
   vendor?: string;
 }
 
+interface ProductMutationOptions {
+  description?: string;
+  format: OutputFormat;
+  handle?: string;
+  status?: string;
+  tags?: string;
+  title?: string;
+  type?: string;
+  vendor?: string;
+}
+
+interface ProductUpdateOptions extends ProductMutationOptions {
+  matchHandle?: boolean;
+  newHandle?: string;
+}
+
+interface ProductDeleteOptions {
+  force?: boolean;
+  format: OutputFormat;
+  handle?: boolean;
+}
+
+interface ProductMutationResponse {
+  product: ProductDetails | null;
+  userErrors: GraphQlUserError[];
+}
+
+interface ProductCreateResponse {
+  productCreate: ProductMutationResponse;
+}
+
+interface ProductUpdateResponse {
+  productUpdate: ProductMutationResponse;
+}
+
+interface ProductDeleteResponse {
+  productDelete: {
+    deletedProductId: string | null;
+    productDeleteOperation: {
+      deletedProductId: string | null;
+      id: string;
+      status: string;
+    } | null;
+    userErrors: GraphQlUserError[];
+  };
+}
+
 export function registerProductCommands(program: Command): void {
-  const products = program.command("products").description("Read product catalog data");
+  const products = program
+    .command("products")
+    .description("Read and modify product catalog data");
 
   products
     .command("list")
@@ -111,9 +164,9 @@ export function registerProductCommands(program: Command): void {
       "after",
       `
 Examples:
-  store-manager products list --limit 20
-  store-manager products list --vendor Pichardo --status active
-  store-manager products list --query 'tag:"miniatura" status:active' --sort updated-at
+  shopfleet products list --limit 20
+  shopfleet products list --vendor Pichardo --status active
+  shopfleet products list --query 'tag:"miniatura" status:active' --sort updated-at
 
 Notes:
   --query uses Shopify search syntax directly.
@@ -140,8 +193,8 @@ Notes:
       "after",
       `
 Examples:
-  store-manager products search corona
-  store-manager products search macarena --status active --limit 5
+  shopfleet products search corona
+  shopfleet products search macarena --status active --limit 5
 
 Notes:
   This command builds a Shopify search query and sorts by relevance.
@@ -174,9 +227,9 @@ Notes:
       "after",
       `
 Examples:
-  store-manager products get gid://shopify/Product/1234567890
-  store-manager products get 1234567890 --format table
-  store-manager products get my-product-handle --handle
+  shopfleet products get gid://shopify/Product/1234567890
+  shopfleet products get 1234567890 --format table
+  shopfleet products get my-product-handle --handle
 
 Notes:
   Without --handle, the argument must be a Shopify product GID or numeric product ID.
@@ -211,6 +264,155 @@ Notes:
         }
 
         printProductDetails(product);
+      },
+    );
+
+  products
+    .command("create")
+    .description("Create a product with top-level product fields")
+    .requiredOption("--title <title>", "Product title")
+    .option("--description <html>", "HTML description")
+    .option("--handle <handle>", "Product handle")
+    .option("--vendor <vendor>", "Vendor")
+    .option("--type <productType>", "Product type")
+    .option("--tags <tags>", "Comma-separated tags")
+    .option("--status <status>", "Product status: active, draft or archived")
+    .option("--format <format>", "table or json", "json")
+    .addHelpText(
+      "after",
+      `
+Examples:
+  shopfleet products create --title "Test product" --status draft
+  shopfleet products create --title "Test product" --vendor Pichardo --type Accesorio --tags test,cli
+
+Notes:
+  This command only sets top-level product fields. Variants, media and inventory stay out of scope for now.
+      `,
+    )
+    .action(async (options: ProductMutationOptions, command: Command) => {
+      const storeAlias = command.optsWithGlobals().store as string | undefined;
+      const store = await resolveStore(storeAlias);
+      const client = new ShopifyClient({ store });
+      const data = await client.query<ProductCreateResponse>({
+        query: PRODUCT_CREATE_MUTATION,
+        variables: {
+          product: buildProductCreateInput(options),
+        },
+      });
+
+      assertNoUserErrors(data.productCreate.userErrors);
+
+      if (!data.productCreate.product) {
+        throw new Error("Shopify did not return the created product.");
+      }
+
+      printProductMutationResult(data.productCreate.product, options.format);
+    });
+
+  products
+    .command("update")
+    .description("Update top-level fields for an existing product")
+    .argument("<idOrHandle>", "Product GID, numeric ID or handle")
+    .option("--handle", "Treat the argument as a product handle")
+    .option("--title <title>", "Product title")
+    .option("--description <html>", "HTML description")
+    .option("--new-handle <handle>", "New product handle")
+    .option("--vendor <vendor>", "Vendor")
+    .option("--type <productType>", "Product type")
+    .option("--tags <tags>", "Comma-separated tags")
+    .option("--status <status>", "Product status: active, draft or archived")
+    .option("--format <format>", "table or json", "json")
+    .addHelpText(
+      "after",
+      `
+Examples:
+  shopfleet products update 1234567890 --title "Nuevo titulo"
+  shopfleet products update my-handle --handle --status draft --tags test,cli
+  shopfleet products update 1234567890 --new-handle nuevo-handle
+
+Notes:
+  Use --handle only to resolve the target product by its current handle.
+  Use --new-handle if you want to change the product handle.
+      `,
+    )
+    .action(
+      async (idOrHandle: string, options: ProductUpdateOptions, command: Command) => {
+        const storeAlias = command.optsWithGlobals().store as string | undefined;
+        const store = await resolveStore(storeAlias);
+        const client = new ShopifyClient({ store });
+        const id = await resolveProductReference(client, idOrHandle, Boolean(options.handle));
+        const productUpdate = buildProductUpdateInput(id, options);
+        const data = await client.query<ProductUpdateResponse>({
+          query: PRODUCT_UPDATE_MUTATION,
+          variables: {
+            product: productUpdate,
+          },
+        });
+
+        assertNoUserErrors(data.productUpdate.userErrors);
+
+        if (!data.productUpdate.product) {
+          throw new Error("Shopify did not return the updated product.");
+        }
+
+        printProductMutationResult(data.productUpdate.product, options.format);
+      },
+    );
+
+  products
+    .command("delete")
+    .description("Delete a product by GID, numeric ID or handle")
+    .argument("<idOrHandle>", "Product GID, numeric ID or handle")
+    .option("--handle", "Treat the argument as a product handle")
+    .option("--force", "Required to execute the delete")
+    .option("--format <format>", "table or json", "json")
+    .addHelpText(
+      "after",
+      `
+Examples:
+  shopfleet products delete 1234567890 --force
+  shopfleet products delete my-handle --handle --force
+
+Notes:
+  This command is destructive and requires --force.
+  Deletion runs synchronously so the CLI can return the result directly.
+      `,
+    )
+    .action(
+      async (idOrHandle: string, options: ProductDeleteOptions, command: Command) => {
+        if (!options.force) {
+          throw new Error("Refusing to delete without --force.");
+        }
+
+        const storeAlias = command.optsWithGlobals().store as string | undefined;
+        const store = await resolveStore(storeAlias);
+        const client = new ShopifyClient({ store });
+        const id = await resolveProductReference(client, idOrHandle, Boolean(options.handle));
+        const data = await client.query<ProductDeleteResponse>({
+          query: PRODUCT_DELETE_MUTATION,
+          variables: {
+            input: { id },
+            synchronous: true,
+          },
+        });
+
+        assertNoUserErrors(data.productDelete.userErrors);
+
+        const result = {
+          deletedProductId:
+            data.productDelete.deletedProductId ??
+            data.productDelete.productDeleteOperation?.deletedProductId ??
+            id,
+          operationId: data.productDelete.productDeleteOperation?.id ?? "",
+          status: data.productDelete.productDeleteOperation?.status ?? "COMPLETED",
+        };
+
+        if (options.format === "json") {
+          printJson(result);
+          return;
+        }
+
+        printTable([result], ["deletedProductId", "status", "operationId"]);
       },
     );
 }
@@ -317,6 +519,92 @@ function printProductDetails(product: ProductDetails): void {
   }
 }
 
+function printProductMutationResult(
+  product: ProductDetails,
+  format: OutputFormat,
+): void {
+  if (format === "json") {
+    printJson(product);
+    return;
+  }
+
+  printProductDetails(product);
+}
+
+async function resolveProductReference(
+  client: ShopifyClient,
+  input: string,
+  treatAsHandle: boolean,
+): Promise<string> {
+  if (!treatAsHandle) {
+    return normalizeProductId(input);
+  }
+
+  const product = (
+    await client.query<ProductByHandleResponse>({
+      query: PRODUCT_BY_HANDLE_QUERY,
+      variables: { handle: input },
+    })
+  ).productByHandle;
+
+  if (!product) {
+    throw new Error(`Product not found: ${input}`);
+  }
+
+  return product.id;
+}
+
+function assertNoUserErrors(userErrors: GraphQlUserError[]): void {
+  if (userErrors.length === 0) {
+    return;
+  }
+
+  const message = userErrors
+    .map((error) => {
+      const field = error.field?.join(".") ?? "";
+      return field ? `${field}: ${error.message}` : error.message;
+    })
+    .join("\n");
+
+  throw new Error(message);
+}
+
+export function buildProductCreateInput(
+  options: ProductMutationOptions,
+): Record<string, unknown> {
+  return omitUndefined({
+    descriptionHtml: options.description,
+    handle: options.handle,
+    productType: options.type,
+    status: parseProductStatus(options.status),
+    tags: options.tags !== undefined ? parseTags(options.tags) : undefined,
+    title: options.title,
+    vendor: options.vendor,
+  });
+}
+
+export function buildProductUpdateInput(
+  id: string,
+  options: ProductUpdateOptions,
+): Record<string, unknown> {
+  const payload = omitUndefined({
+    descriptionHtml: options.description,
+    handle: options.newHandle,
+    id,
+    productType: options.type,
+    status: parseProductStatus(options.status),
+    tags: options.tags !== undefined ? parseTags(options.tags) : undefined,
+    title: options.title,
+    vendor: options.vendor,
+  });
+
+  if (Object.keys(payload).length === 1) {
+    throw new Error("Nothing to update. Pass at least one field to modify.");
+  }
+
+  return payload;
+}
+
 export function normalizeProductId(input: string): string {
   if (input.startsWith("gid://shopify/Product/")) {
     return input;
@@ -372,6 +660,29 @@ export function parseProductSortKey(
   return normalized as ProductSortKey;
 }
 
+export function parseProductStatus(status?: string): string | undefined {
+  if (!status) {
+    return undefined;
+  }
+
+  const normalized = status.trim().toUpperCase();
+
+  if (!["ACTIVE", "ARCHIVED", "DRAFT"].includes(normalized)) {
+    throw new Error(
+      `Invalid --status value "${status}". Valid values: active, archived, draft.`,
+    );
+  }
+
+  return normalized;
+}
+
+export function parseTags(tags: string): string[] {
+  return tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
 function sanitizeRawQuery(value?: string): string | null {
   const trimmed = value?.trim();
 
@@ -394,4 +705,10 @@ function quoteSearchValue(value: string): string {
   }
 
   return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+}
+
+function omitUndefined(input: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined),
+  );
 }

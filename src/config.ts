@@ -1,10 +1,11 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import type { AppConfig, StoreConfig, StoreReference } from "./types.js";
 
-const CONFIG_DIR_NAME = ".store-manager";
+const CONFIG_DIR_NAME = ".shopfleet";
+const LEGACY_CONFIG_DIR_NAME = ".store-manager";
 const CONFIG_FILE_NAME = "stores.json";
 const MYSHOPIFY_DOMAIN_PATTERN = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i;
 
@@ -14,6 +15,14 @@ export function getConfigDirPath(): string {
 
 export function getConfigFilePath(): string {
   return path.join(getConfigDirPath(), CONFIG_FILE_NAME);
+}
+
+function getLegacyConfigDirPath(): string {
+  return path.join(os.homedir(), LEGACY_CONFIG_DIR_NAME);
+}
+
+function getLegacyConfigFilePath(): string {
+  return path.join(getLegacyConfigDirPath(), CONFIG_FILE_NAME);
 }
 
 export function normalizeDomain(domain: string): string {
@@ -26,6 +35,48 @@ export function normalizeDomain(domain: string): string {
 
 async function ensureConfigDir(): Promise<void> {
   await mkdir(getConfigDirPath(), { recursive: true });
+}
+
+async function moveLegacyConfigFile(sourcePath: string, targetPath: string): Promise<void> {
+  try {
+    await rename(sourcePath, targetPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EXDEV") {
+      throw error;
+    }
+
+    await copyFile(sourcePath, targetPath);
+    await rm(sourcePath, { force: true });
+  }
+}
+
+async function migrateLegacyConfigIfNeeded(): Promise<void> {
+  const targetPath = getConfigFilePath();
+
+  try {
+    await readFile(targetPath, "utf8");
+    return;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  const legacyPath = getLegacyConfigFilePath();
+
+  try {
+    await readFile(legacyPath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return;
+    }
+
+    throw error;
+  }
+
+  await ensureConfigDir();
+  await moveLegacyConfigFile(legacyPath, targetPath);
+  await rm(getLegacyConfigDirPath(), { force: true, recursive: true });
 }
 
 function createEmptyConfig(): AppConfig {
@@ -56,6 +107,7 @@ function validateStoreConfig(store: StoreConfig): void {
 }
 
 export async function loadConfig(): Promise<AppConfig> {
+  await migrateLegacyConfigIfNeeded();
   const filePath = getConfigFilePath();
 
   try {
@@ -88,6 +140,7 @@ export async function saveConfig(config: AppConfig): Promise<void> {
     validateStoreConfig(store);
   }
 
+  await migrateLegacyConfigIfNeeded();
   await ensureConfigDir();
 
   await writeFile(getConfigFilePath(), `${JSON.stringify(config, null, 2)}\n`, "utf8");
@@ -158,7 +211,7 @@ export async function resolveStore(alias?: string): Promise<StoreReference> {
 
   if (!effectiveAlias) {
     throw new Error(
-      "No store selected. Add a store with `store-manager config add ...` first.",
+      "No store selected. Add a store with `shopfleet config add ...` first.",
     );
   }
 

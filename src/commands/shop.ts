@@ -33,8 +33,8 @@ export function registerShopCommands(program: Command): void {
       "after",
       `
 Examples:
-  store-manager shop info
-  store-manager shop info --store main --format json
+  shopfleet shop info
+  shopfleet shop info --store main --format json
 
 Returns:
   name, email, myshopify domain, plan and currency for the selected store.

@@ -1,4 +1,4 @@
-# Store Manager CLI - Implementation Plan
+# Shopfleet CLI - Implementation Plan
 
 Multi-store Shopify CLI built on the GraphQL Admin API.
 
@@ -14,6 +14,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `products list`
 - `products get`
 - `products search`
+- `products create`
+- `products update`
+- `products delete`
 
 ### In progress
 
@@ -40,7 +43,7 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 ## 2. Project structure
 
 ```text
-store-manager/
+shopfleet/
 ├── src/
 │   ├── index.ts                  # CLI entry point
 │   ├── client.ts                 # GraphQL client (multi-store)
@@ -92,7 +95,7 @@ store-manager/
 
 ## 3. Multi-store configuration
 
-### File: `~/.store-manager/stores.json`
+### File: `~/.shopfleet/stores.json`
 
 ```json
 {
@@ -124,22 +127,22 @@ Notes:
 
 ```bash
 # Use the default store
-store-manager products list
+shopfleet products list
 
 # Use a specific store
-store-manager products list --store store2
+shopfleet products list --store store2
 
 # Change the default store
-store-manager config set-default store2
+shopfleet config set-default store2
 ```
 
 ### Configuration commands
 
 ```bash
-store-manager config add <alias> --domain <domain> --client-id <clientId> --client-secret <clientSecret>
-store-manager config remove <alias>
-store-manager config list
-store-manager config set-default <alias>
+shopfleet config add <alias> --domain <domain> --client-id <clientId> --client-secret <clientSecret>
+shopfleet config remove <alias>
+shopfleet config list
+shopfleet config set-default <alias>
 ```
 
 ## 4. Full operation catalog
@@ -152,9 +155,9 @@ Reference: operations from MCP `@ajackus/shopify-mcp-server` (47 tools) plus use
 | --- | --- | --- | --- |
 | done | `products list` | `products` query | List products with filters |
 | done | `products get <id>` | `product` query | Product detail |
-| pending | `products create` | `productCreate` mutation | Create product |
-| pending | `products update <id>` | `productUpdate` mutation | Update product |
-| pending | `products delete <id>` | `productDelete` mutation | Delete product |
+| done | `products create` | `productCreate` mutation | Create product |
+| done | `products update <id>` | `productUpdate` mutation | Update product |
+| done | `products delete <id>` | `productDelete` mutation | Delete product |
 | done | `products search <query>` | `products` query + filter | Search by title, SKU, vendor, or type |
 
 Common flags: `--limit`, `--after`, `--sort`, `--reverse`, `--status`, `--vendor`, `--type`, `--tag`

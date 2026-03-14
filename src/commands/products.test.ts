@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildProductCreateInput,
+  buildProductUpdateInput,
   buildProductSearchQuery,
   normalizeProductId,
+  parseProductStatus,
   parseProductSortKey,
+  parseTags,
 } from "./products.js";
 
 describe("normalizeProductId", () => {
@@ -54,5 +58,72 @@ describe("parseProductSortKey", () => {
     expect(() => parseProductSortKey("relevance", null)).toThrow(
       "--sort relevance requires a search query.",
     );
+  });
+});
+
+describe("parseProductStatus", () => {
+  it("normalizes valid statuses", () => {
+    expect(parseProductStatus("draft")).toBe("DRAFT");
+  });
+
+  it("rejects invalid statuses", () => {
+    expect(() => parseProductStatus("published")).toThrow(
+      'Invalid --status value "published". Valid values: active, archived, draft.',
+    );
+  });
+});
+
+describe("parseTags", () => {
+  it("splits and trims comma-separated tags", () => {
+    expect(parseTags(" test, cli , shopify ")).toEqual(["test", "cli", "shopify"]);
+  });
+});
+
+describe("buildProductCreateInput", () => {
+  it("maps CLI options into Shopify product input", () => {
+    expect(
+      buildProductCreateInput({
+        description: "<p>Hola</p>",
+        format: "json",
+        handle: "test-product",
+        status: "draft",
+        tags: "test,cli",
+        title: "Test product",
+        type: "Accesorio",
+        vendor: "Pichardo",
+      }),
+    ).toEqual({
+      descriptionHtml: "<p>Hola</p>",
+      handle: "test-product",
+      productType: "Accesorio",
+      status: "DRAFT",
+      tags: ["test", "cli"],
+      title: "Test product",
+      vendor: "Pichardo",
+    });
+  });
+});
+
+describe("buildProductUpdateInput", () => {
+  it("requires at least one field beyond id", () => {
+    expect(() =>
+      buildProductUpdateInput("gid://shopify/Product/1", {
+        format: "json",
+      }),
+    ).toThrow("Nothing to update. Pass at least one field to modify.");
+  });
+
+  it("uses newHandle for handle updates", () => {
+    expect(
+      buildProductUpdateInput("gid://shopify/Product/1", {
+        format: "json",
+        newHandle: "nuevo-handle",
+        title: "Nuevo titulo",
+      }),
+    ).toEqual({
+      handle: "nuevo-handle",
+      id: "gid://shopify/Product/1",
+      title: "Nuevo titulo",
+    });
   });
 });

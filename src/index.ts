@@ -10,7 +10,7 @@ import { registerShopCommands } from "./commands/shop.js";
 const program = new Command();
 
 program
-  .name("store-manager")
+  .name("shopfleet")
   .description("Private CLI for managing Shopify stores")
   .version("0.1.0")
   .option("--store <alias>", "Configured store alias");

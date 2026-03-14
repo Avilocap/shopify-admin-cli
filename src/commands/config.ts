@@ -37,8 +37,8 @@ export function registerConfigCommands(program: Command): void {
       "after",
       `
 Examples:
-  store-manager config add main --domain my-shop.myshopify.com --client-id xxx --client-secret yyy
-  store-manager config add legacy --domain old-shop.myshopify.com --token shpat_xxx
+  shopfleet config add main --domain my-shop.myshopify.com --client-id xxx --client-secret yyy
+  shopfleet config add legacy --domain old-shop.myshopify.com --token shpat_xxx
 
 Notes:
   --domain must be the Shopify admin domain (*.myshopify.com), not the public storefront domain.
@@ -77,7 +77,7 @@ Notes:
       "after",
       `
 Example:
-  store-manager config remove main
+  shopfleet config remove main
       `,
     )
     .action(async (alias: string) => {
@@ -92,7 +92,7 @@ Example:
       "after",
       `
 Example:
-  store-manager config list
+  shopfleet config list
       `,
     )
     .action(async () => {
@@ -117,7 +117,7 @@ Example:
       "after",
       `
 Example:
-  store-manager config set-default main
+  shopfleet config set-default main
       `,
     )
     .action(async (alias: string) => {
