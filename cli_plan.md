@@ -17,6 +17,10 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `products create`
 - `products update`
 - `products delete`
+- `orders list`
+- `orders get`
+- `orders transactions`
+- `orders cancel`
 - migration from `~/.store-manager/stores.json` to `~/.shopfleet/stores.json`
 - agent-friendly `--help` for implemented commands
 
@@ -29,11 +33,15 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `products create`
 - `products update`
 - `products delete`
+- `orders list`
+- `orders get`
+- `orders transactions`
 
 Notes:
 
 - product write operations were tested with an isolated temporary product
 - the temporary product was deleted at the end of the validation flow
+- order cancellation is implemented but was not executed against a real order
 
 ### In progress
 
@@ -185,12 +193,12 @@ Current output: `--format table|json`
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `orders list` | `orders` query | List orders with filters |
-| pending | `orders get <id>` | `order` query | Order detail |
-| pending | `orders transactions <id>` | `order` query | Order transactions |
-| pending | `orders cancel <id>` | `orderCancel` | Cancel order |
+| done | `orders list` | `orders` query | List orders with filters |
+| done | `orders get <id>` | `order` query | Order detail |
+| done | `orders transactions <id>` | `order` query | Order transactions |
+| done | `orders cancel <id>` | `orderCancel` | Cancel order |
 
-Flags: `--status`, `--financial-status`, `--fulfillment-status`, `--from`, `--to`, `--limit`, `--cursor`
+Flags: `--status`, `--financial-status`, `--fulfillment-status`, `--from`, `--to`, `--limit`, `--after`, `--sort`, `--reverse`
 
 ### 4.3 Customers (4 commands)
 

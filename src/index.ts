@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 
 import { registerConfigCommands } from "./commands/config.js";
+import { registerOrderCommands } from "./commands/orders.js";
 import { registerProductCommands } from "./commands/products.js";
 import { registerShopCommands } from "./commands/shop.js";
 
@@ -18,6 +19,7 @@ program
 registerConfigCommands(program);
 registerShopCommands(program);
 registerProductCommands(program);
+registerOrderCommands(program);
 
 program.showHelpAfterError();
 

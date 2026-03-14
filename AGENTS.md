@@ -28,6 +28,10 @@ The active MVP covers:
 - `products create`
 - `products update`
 - `products delete`
+- `orders list`
+- `orders get`
+- `orders transactions`
+- `orders cancel`
 
 ## Expected structure
 
