@@ -25,6 +25,9 @@ MVP in progress with focus on:
 - `customers get`
 - `customers search`
 - `customers orders`
+- `financial transactions`
+- `financial refund`
+- `financial summary`
 - `inventory levels`
 - `inventory adjust`
 - `inventory locations`
@@ -168,6 +171,9 @@ shopfleet customers list --limit 10
 shopfleet customers search maria@example.com
 shopfleet customers get 1234567890 --format table
 shopfleet customers orders 1234567890 --limit 10
+shopfleet financial transactions 1234567890
+shopfleet financial refund 1234567890 --line-items 987654321:1 --force
+shopfleet financial summary --from 2026-03-01 --to 2026-03-14
 shopfleet inventory levels --sku ABC-123
 shopfleet inventory adjust --item-id 30322695 --location-id 124656943 --quantity -4
 shopfleet inventory locations --limit 10
@@ -280,6 +286,31 @@ shopfleet inventory locations --query 'name:warehouse' --include-inactive
 ```
 
 Locations are active-only by default unless `--include-inactive` is set.
+
+## Financial
+
+`financial transactions` returns the transaction history for the target order.
+
+`financial refund` creates a refund through `refundCreate` with explicit safety guards:
+
+```bash
+shopfleet financial refund 1234567890 --line-items 987654321:1 --force
+shopfleet financial refund gid://shopify/Order/1234567890 --line-items gid://shopify/LineItem/987654321:2 --shipping-amount 6.99 --restock --notify --force
+```
+
+`financial refund` expects an order GID or numeric ID.
+`--line-items` expects Shopify line item GIDs or numeric line item IDs in the form `<line-item-id>:<quantity>`.
+Provide `--line-items`, `--shipping-amount`, or both.
+`financial refund` was not executed against a real order during validation, to avoid changing production financial data.
+
+`financial summary` reads matching orders and calculates totals locally:
+
+```bash
+shopfleet financial summary --from 2026-03-01 --to 2026-03-14
+shopfleet financial summary --financial-status paid --limit 250 --format json
+```
+
+`--limit` caps how many matching orders are included in the summary.
 
 ## Collections
 

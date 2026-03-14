@@ -36,6 +36,9 @@ The active MVP covers:
 - `customers get`
 - `customers search`
 - `customers orders`
+- `financial transactions`
+- `financial refund`
+- `financial summary`
 - `collections list`
 - `collections get`
 - `collections products`

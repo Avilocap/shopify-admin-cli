@@ -25,6 +25,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `customers get`
 - `customers search`
 - `customers orders`
+- `financial transactions`
+- `financial refund`
+- `financial summary`
 - `inventory levels`
 - `inventory adjust`
 - `inventory locations`
@@ -55,6 +58,7 @@ Notes:
 - product write operations were tested with an isolated temporary product
 - the temporary product was deleted at the end of the validation flow
 - order cancellation is implemented but was not executed against a real order
+- financial refund is implemented but was not executed against a real order
 - collections commands were validated in read-only mode against a real store
 
 ### In progress
@@ -271,11 +275,12 @@ Create flags: `--order-id`, `--line-items`, `--tracking-number`, `--tracking-url
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `financial transactions <order-id>` | `order.transactions` | Transactions for an order |
-| pending | `financial refund <order-id>` | `refundCreate` | Create refund |
-| pending | `financial summary` | Calculated from orders | Financial summary |
+| done | `financial transactions <order-id>` | `order.transactions` | Transactions for an order |
+| done | `financial refund <order-id>` | `refundCreate` | Create refund |
+| done | `financial summary` | Calculated from orders | Financial summary |
 
-Refund flags: `--line-items`, `--shipping-amount`, `--note`, `--notify`, `--restock`
+Refund flags: `--line-items`, `--shipping-amount`, `--note`, `--notify`, `--restock`, `--force`
+Summary flags: `--limit`, `--query`, `--status`, `--financial-status`, `--fulfillment-status`, `--from`, `--to`
 
 ### 4.9 Gift cards (3 commands)
 
