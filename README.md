@@ -108,12 +108,31 @@ For each store:
 
 Shopfleet uses `clientId` and `clientSecret` for new apps. It requests an Admin API `access_token` from `POST /admin/oauth/access_token` with the `client_credentials` grant when needed. Tokens from this flow expire after 24 hours, so the CLI requests a fresh token again when required.
 
-For a minimal read-only product and inventory setup, request only:
+Recommended Admin API scopes:
 
-- `read_products`
-- `read_inventory`
-
-If you want to use other command groups later, add the extra scopes those commands require before installing or updating the app version.
+- `write_products`
+- `write_orders`
+- `read_all_orders`
+- `write_customers`
+- `write_inventory`
+- `write_discounts`
+- `read_assigned_fulfillment_orders`
+- `write_assigned_fulfillment_orders`
+- `read_merchant_managed_fulfillment_orders`
+- `write_merchant_managed_fulfillment_orders`
+- `read_third_party_fulfillment_orders`
+- `write_third_party_fulfillment_orders`
+- `write_gift_cards`
+- `write_content`
+- `write_draft_orders`
+- `write_metaobject_definitions`
+- `write_metaobjects`
+- `write_online_store_navigation`
+- `read_price_rules`
+- `read_reports`
+- `read_locations`
+- `read_markets`
+- `read_themes`
 
 Then register the store in the CLI:
 
