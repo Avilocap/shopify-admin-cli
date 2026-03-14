@@ -34,6 +34,9 @@ MVP in progress with focus on:
 - `collections list`
 - `collections get`
 - `collections products`
+- `fulfillment list`
+- `fulfillment create`
+- `fulfillment tracking`
 - `discounts list`
 - `discounts get`
 - `discounts create`
@@ -183,6 +186,9 @@ shopfleet inventory locations --limit 10
 shopfleet collections list --limit 10
 shopfleet collections get 1234567890 --format table
 shopfleet collections products 1234567890 --limit 10
+shopfleet fulfillment list --limit 10
+shopfleet fulfillment create --order-id 1234567890
+shopfleet fulfillment tracking 255858046 --tracking-number 1Z9999999999999999
 shopfleet discounts list --limit 10
 shopfleet discounts get gid://shopify/DiscountNode/1234567890 --format table
 shopfleet discounts create --title "Spring 10" --code SPRING10 --starts 2026-03-14 --percentage 10
@@ -292,6 +298,40 @@ shopfleet inventory locations --query 'name:warehouse' --include-inactive
 ```
 
 Locations are active-only by default unless `--include-inactive` is set.
+
+## Fulfillment
+
+`fulfillment list` reads Shopify fulfillment orders directly:
+
+```bash
+shopfleet fulfillment list --limit 20
+shopfleet fulfillment list --status open --sort updated-at
+shopfleet fulfillment list --query 'request_status:unsubmitted' --include-closed
+```
+
+`fulfillment create` resolves fulfillment orders from one order and creates a fulfillment for the remaining quantities:
+
+```bash
+shopfleet fulfillment create --order-id 1234567890
+shopfleet fulfillment create --order-id 1234567890 --tracking-number 1Z9999999999999999 --carrier UPS
+shopfleet fulfillment create --order-id 1234567890 --fulfillment-order-id 987654321 --line-items 445529754:1,445529755:2
+```
+
+`fulfillment create` expects an order GID or numeric order ID in `--order-id`.
+`--fulfillment-order-id` expects a fulfillment order GID or numeric ID and is useful when Shopify splits the order across multiple open fulfillment orders.
+`--line-items` expects fulfillment order line item IDs, not order line item IDs. When `--line-items` is omitted, the CLI attempts to fulfill all remaining quantities on the selected fulfillment order targets.
+
+`fulfillment tracking` updates tracking data for an existing fulfillment:
+
+```bash
+shopfleet fulfillment tracking 255858046 --tracking-number 1Z9999999999999999
+shopfleet fulfillment tracking gid://shopify/Fulfillment/255858046 --tracking-url https://example.com/track/255858046 --carrier UPS --notify
+```
+
+`fulfillment tracking` expects a fulfillment GID or numeric fulfillment ID.
+At least one of `--tracking-number`, `--tracking-url`, or `--carrier` is required.
+
+Fulfillment write commands were implemented from the current Shopify Admin GraphQL contract but were not executed against a real store here, to avoid changing production fulfillment data.
 
 ## Financial
 

@@ -45,6 +45,9 @@ The active MVP covers:
 - `discounts list`
 - `discounts get`
 - `discounts create`
+- `fulfillment list`
+- `fulfillment create`
+- `fulfillment tracking`
 
 ## Expected structure
 

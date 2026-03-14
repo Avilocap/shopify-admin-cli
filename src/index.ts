@@ -6,6 +6,7 @@ import { Command } from "commander";
 import { registerCollectionCommands } from "./commands/collections.js";
 import { registerConfigCommands } from "./commands/config.js";
 import { registerCustomerCommands } from "./commands/customers.js";
+import { registerFulfillmentCommands } from "./commands/fulfillment.js";
 import { registerDiscountCommands } from "./commands/discounts.js";
 import { registerFinancialCommands } from "./commands/financial.js";
 import { registerInventoryCommands } from "./commands/inventory.js";
@@ -28,6 +29,7 @@ registerOrderCommands(program);
 registerCustomerCommands(program);
 registerInventoryCommands(program);
 registerCollectionCommands(program);
+registerFulfillmentCommands(program);
 registerDiscountCommands(program);
 registerFinancialCommands(program);
 

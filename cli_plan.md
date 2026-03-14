@@ -37,6 +37,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `discounts list`
 - `discounts get`
 - `discounts create`
+- `fulfillment list`
+- `fulfillment create`
+- `fulfillment tracking`
 - migration from `~/.store-manager/stores.json` to `~/.shopfleet/stores.json`
 - agent-friendly `--help` for implemented commands
 
@@ -268,11 +271,13 @@ Create flags: `--title`, `--code`, `--starts`, `--ends`, `--usage-limit`, `--per
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `fulfillment list` | `fulfillmentOrders` query | List fulfillment orders |
-| pending | `fulfillment create` | `fulfillmentCreateV2` | Create fulfillment |
-| pending | `fulfillment tracking <id>` | `fulfillmentTrackingInfoUpdate` | Update tracking |
+| done | `fulfillment list` | `fulfillmentOrders` query | List fulfillment orders |
+| done | `fulfillment create` | `fulfillmentCreate` | Create fulfillment |
+| done | `fulfillment tracking <id>` | `fulfillmentTrackingInfoUpdate` | Update tracking |
 
-Create flags: `--order-id`, `--line-items`, `--tracking-number`, `--tracking-url`, `--carrier`, `--notify`
+Flags: `--limit`, `--after`, `--query`, `--status`, `--include-closed`, `--sort`, `--reverse`
+Create flags: `--order-id`, `--fulfillment-order-id`, `--line-items`, `--tracking-number`, `--tracking-url`, `--carrier`, `--message`, `--notify`
+Tracking flags: `--tracking-number`, `--tracking-url`, `--carrier`, `--notify`
 
 ### 4.8 Financial (3 commands)
 
