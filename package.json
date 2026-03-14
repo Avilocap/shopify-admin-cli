@@ -4,7 +4,7 @@
   "description": "Multi-store Shopify CLI",
   "type": "module",
   "bin": {
-    "shopfleet": "./dist/index.js"
+    "shopfleet": "dist/index.js"
   },
   "engines": {
     "node": ">=20"
