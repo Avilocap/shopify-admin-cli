@@ -1,5 +1,7 @@
 # Store Manager
 
+Disclaimer: this project was developed using 100% AI.
+
 Private CLI for managing Shopify stores from the terminal.
 
 ## Current status
