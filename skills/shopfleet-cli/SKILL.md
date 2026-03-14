@@ -16,7 +16,7 @@ This repo currently exposes the `shopfleet` CLI from [`src/index.ts`](../../src/
 3. Do not print or log secrets. Store config may contain `clientSecret` or legacy `accessToken`.
 4. Assume configured aliases may be real stores, often production stores. Before any write command, confirm the target alias and the intended effect.
 5. For config-only validation, use a temporary alias with fake credentials and remove it when done.
-6. When a command contract changes, update code, `--help`, [`README.md`](../../README.md), and [`AGENTS.md`](../../AGENTS.md) together when applicable.
+6. When a command contract or method behavior changes, update code, `--help`, [`README.md`](../../README.md), [`AGENTS.md`](../../AGENTS.md), and the relevant files under [`skills/`](../../skills/) together when applicable.
 7. Keep solutions small. Stay on the supported surface; do not introduce traffic, conversion, abandonment, marketing analytics, webhooks, or bulk operations unless explicitly requested.
 
 ## Safe Workflow
@@ -87,7 +87,7 @@ When changing behavior:
 2. Inspect the corresponding GraphQL helper in [`src/graphql`](../../src/graphql) if the command hits Shopify.
 3. Keep behavior explicit and names clear. Avoid premature abstractions.
 4. Update help text examples and identifier notes with `addHelpText("after", ...)`.
-5. If the command contract changed, update [`README.md`](../../README.md) and [`AGENTS.md`](../../AGENTS.md).
+5. If the command contract or method behavior changed, update [`README.md`](../../README.md), [`AGENTS.md`](../../AGENTS.md), and the relevant repository skill docs under [`skills/`](../../skills/).
 
 Then verify:
 

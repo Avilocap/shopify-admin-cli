@@ -89,6 +89,7 @@ Supported commands and capabilities:
 - each command must include at least one realistic example in `--help`
 - when a command has an important precondition, it must appear in `--help`
 - when a command contract changes, update code, `--help`, `README.md`, and this file together when applicable
+- when a method or command behavior changes, update the corresponding repository skill docs in `skills/` in the same change
 - prefer direct, operational language: what it does, what it needs, what it returns
 - avoid marketing language or vague descriptions
 
@@ -111,7 +112,7 @@ Correct clarity examples:
 2. Build with `npm run build`.
 3. Validate types with `npm run typecheck`.
 4. Run tests if they exist.
-5. Update documentation when a command contract changes.
+5. Update documentation and repository skills when a command contract or method changes.
 
 ## Mirror documentation
 
