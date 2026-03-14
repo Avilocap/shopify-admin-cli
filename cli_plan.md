@@ -17,10 +17,27 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `products create`
 - `products update`
 - `products delete`
+- migration from `~/.store-manager/stores.json` to `~/.shopfleet/stores.json`
+- agent-friendly `--help` for implemented commands
+
+### Validated against a real store
+
+- `shop info`
+- `products list`
+- `products get`
+- `products search`
+- `products create`
+- `products update`
+- `products delete`
+
+Notes:
+
+- product write operations were tested with an isolated temporary product
+- the temporary product was deleted at the end of the validation flow
 
 ### In progress
 
-- tightening CLI help and agent-facing documentation
+- keeping plan, README, and CLI help aligned as command contracts evolve
 
 ### Pending
 
@@ -166,98 +183,144 @@ Current output: `--format table|json`
 
 ### 4.2 Orders (4 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `orders list` | `orders` query | List orders with filters |
-| `orders get <id>` | `order` query | Order detail |
-| `orders transactions <id>` | `order` query | Order transactions |
-| `orders cancel <id>` | `orderCancel` | Cancel order |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `orders list` | `orders` query | List orders with filters |
+| pending | `orders get <id>` | `order` query | Order detail |
+| pending | `orders transactions <id>` | `order` query | Order transactions |
+| pending | `orders cancel <id>` | `orderCancel` | Cancel order |
 
 Flags: `--status`, `--financial-status`, `--fulfillment-status`, `--from`, `--to`, `--limit`, `--cursor`
 
 ### 4.3 Customers (4 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `customers list` | `customers` query | List customers |
-| `customers get <id>` | `customer` query | Customer detail |
-| `customers search <query>` | `customers` + filter | Search by name, email, or phone |
-| `customers orders <id>` | `customer.orders` | Orders for a customer |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `customers list` | `customers` query | List customers |
+| pending | `customers get <id>` | `customer` query | Customer detail |
+| pending | `customers search <query>` | `customers` + filter | Search by name, email, or phone |
+| pending | `customers orders <id>` | `customer.orders` | Orders for a customer |
 
 Flags: `--limit`, `--cursor`, `--sort`, `--reverse`
 
 ### 4.4 Inventory (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `inventory levels` | `inventoryItems` query | Inventory levels |
-| `inventory adjust` | `inventoryAdjustQuantities` | Adjust quantity |
-| `inventory locations` | `locations` query | List locations |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `inventory levels` | `inventoryItems` query | Inventory levels |
+| pending | `inventory adjust` | `inventoryAdjustQuantities` | Adjust quantity |
+| pending | `inventory locations` | `locations` query | List locations |
 
 Adjust flags: `--item-id`, `--location-id`, `--quantity`
 
 ### 4.5 Collections (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `collections list` | `collections` query | List collections |
-| `collections get <id>` | `collection` query | Collection detail |
-| `collections products <id>` | `collection.products` | Products in a collection |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `collections list` | `collections` query | List collections |
+| pending | `collections get <id>` | `collection` query | Collection detail |
+| pending | `collections products <id>` | `collection.products` | Products in a collection |
 
 Flags: `--limit`, `--cursor`, `--type smart|custom`
 
 ### 4.6 Discounts (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `discounts list` | `discountNodes` query | List discounts |
-| `discounts get <id>` | `discountNode` query | Discount detail |
-| `discounts create` | `discountCodeBasicCreate` | Create discount code |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `discounts list` | `discountNodes` query | List discounts |
+| pending | `discounts get <id>` | `discountNode` query | Discount detail |
+| pending | `discounts create` | `discountCodeBasicCreate` | Create discount code |
 
 Create flags: `--title`, `--code`, `--starts`, `--ends`, `--usage-limit`, `--percentage`, `--amount`, `--once-per-customer`
 
 ### 4.7 Fulfillment (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `fulfillment list` | `fulfillmentOrders` query | List fulfillment orders |
-| `fulfillment create` | `fulfillmentCreateV2` | Create fulfillment |
-| `fulfillment tracking <id>` | `fulfillmentTrackingInfoUpdate` | Update tracking |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `fulfillment list` | `fulfillmentOrders` query | List fulfillment orders |
+| pending | `fulfillment create` | `fulfillmentCreateV2` | Create fulfillment |
+| pending | `fulfillment tracking <id>` | `fulfillmentTrackingInfoUpdate` | Update tracking |
 
 Create flags: `--order-id`, `--line-items`, `--tracking-number`, `--tracking-url`, `--carrier`, `--notify`
 
 ### 4.8 Financial (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `financial transactions <order-id>` | `order.transactions` | Transactions for an order |
-| `financial refund <order-id>` | `refundCreate` | Create refund |
-| `financial summary` | Calculated from orders | Financial summary |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `financial transactions <order-id>` | `order.transactions` | Transactions for an order |
+| pending | `financial refund <order-id>` | `refundCreate` | Create refund |
+| pending | `financial summary` | Calculated from orders | Financial summary |
 
 Refund flags: `--line-items`, `--shipping-amount`, `--note`, `--notify`, `--restock`
 
 ### 4.9 Gift cards (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `gift-cards list` | `giftCards` query | List gift cards |
-| `gift-cards get <id>` | `giftCard` query | Gift card detail |
-| `gift-cards create` | `giftCardCreate` | Create gift card |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `gift-cards list` | `giftCards` query | List gift cards |
+| pending | `gift-cards get <id>` | `giftCard` query | Gift card detail |
+| pending | `gift-cards create` | `giftCardCreate` | Create gift card |
 
 Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `--recipient-message`
 
 ### 4.10 Content (4 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `pages list` | `pages` query (REST/GQL) | List pages |
-| `pages create` | `pageCreate` | Create page |
-| `blogs list` | `blogs` query | List blogs |
-| `blogs create-article` | `articleCreate` | Create blog article |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `pages list` | `pages` query (REST/GQL) | List pages |
+| pending | `pages create` | `pageCreate` | Create page |
+| pending | `blogs list` | `blogs` query | List blogs |
+| pending | `blogs create-article` | `articleCreate` | Create blog article |
 
 ### 4.11 Webhooks (3 commands)
 
-| Command | GraphQL operation | Description |
-| --- | --- | --- |
-| `webhooks list` | `webhookSubscriptions` query | List webhooks |
-| `webhooks create` | `webhookSubscriptionCreate` | Create webhook |
+| Status | Command | GraphQL operation | Description |
+| --- | --- | --- | --- |
+| pending | `webhooks list` | `webhookSubscriptions` query | List webhooks |
+| pending | `webhooks create` | `webhookSubscriptionCreate` | Create webhook |
+| pending | `webhooks delete <id>` | `webhookSubscriptionDelete` | Delete webhook |
+
+## 5. Cross-cutting behavior
+
+### Current
+
+- `--format table|json` on implemented commands
+- manual pagination with `--after`
+- explicit `--help` with examples for implemented commands
+- destructive product deletion requires `--force`
+
+### Deferred
+
+- CSV output
+- automatic `--all` pagination
+- verbose GraphQL output
+- destructive confirmations beyond the current `--force` guard
+
+## 6. Implementation phases
+
+### Phase 1 - Foundation
+
+- done: project setup
+- done: multi-store config
+- done: Shopify GraphQL client
+- done: table and JSON output
+- done: manual cursor pagination
+- done: `shop info`
+
+### Phase 2 - Product vertical
+
+- done: `products list`
+- done: `products get`
+- done: `products search`
+- done: `products create`
+- done: `products update`
+- done: `products delete`
+
+### Phase 3 - Next recommended work
+
+- `orders list`
+- `orders get`
+- `customers list`
+- `customers get`
+- `inventory levels`
+- `inventory locations`
