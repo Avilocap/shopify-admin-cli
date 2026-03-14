@@ -1,35 +1,35 @@
 # Store Manager
 
-CLI privada para gestionar tiendas Shopify desde terminal.
+Private CLI for managing Shopify stores from the terminal.
 
-## Estado actual
+## Current status
 
-MVP en construccion con foco en:
+MVP in progress with focus on:
 
-- configuracion multi-tienda
-- autenticacion contra Shopify Admin GraphQL
+- multi-store configuration
+- authentication against Shopify Admin GraphQL
 - `shop info`
 - `products list`
 - `products get`
 
-## Requisitos
+## Requirements
 
-- Node.js 20 o superior
-- Una app creada en Shopify Dev Dashboard e instalada en cada tienda
-- Credenciales por tienda:
-  - `domain` (`*.myshopify.com`, no el dominio publico)
+- Node.js 20 or higher
+- An app created in Shopify Dev Dashboard and installed on each store
+- Per-store credentials:
+  - `domain` (`*.myshopify.com`, not the public domain)
   - `clientId`
   - `clientSecret`
 
-Tambien se admite `accessToken` legacy de forma opcional para tiendas con apps antiguas.
+Legacy `accessToken` is also supported as an optional compatibility path for older apps.
 
-## Instalar dependencias
+## Install dependencies
 
 ```bash
 npm install
 ```
 
-## Desarrollo
+## Development
 
 ```bash
 npm run dev -- --help
@@ -41,15 +41,15 @@ npm run dev -- --help
 npm run build
 ```
 
-## Configuracion de tiendas
+## Store configuration
 
-La CLI guarda la configuracion en:
+The CLI stores configuration in:
 
 ```text
 ~/.store-manager/stores.json
 ```
 
-Ejemplo:
+Example:
 
 ```json
 {
@@ -65,7 +65,7 @@ Ejemplo:
 }
 ```
 
-## Primeros comandos
+## First commands
 
 ```bash
 store-manager config add main --domain main-store.myshopify.com --client-id xxx --client-secret yyy
@@ -80,19 +80,19 @@ store-manager products get paso-macarena-miniatura --handle
 
 ## API version
 
-Por defecto se usa `2026-01`. Se puede sobreescribir con:
+The default version is `2026-01`. You can override it with:
 
 ```bash
 SHOPIFY_API_VERSION=2026-01 store-manager shop info
 ```
 
-## Productos
+## Products
 
-`products list` soporta filtros sencillos:
+`products list` supports simple filters:
 
 ```bash
 store-manager products list --vendor Pichardo --type Pasito --status active
 store-manager products list --query 'tag:"miniatura" status:active' --sort updated-at
 ```
 
-`products search` usa la busqueda por defecto de Shopify y ordena por relevancia.
+`products search` uses Shopify's default search and sorts by relevance.

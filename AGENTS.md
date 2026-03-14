@@ -1,79 +1,82 @@
 # AGENTS.md
 
-Guia operativa para agentes que trabajen en este repositorio.
+Operational guide for agents working in this repository.
 
-## Objetivo
+## Goal
 
-Mantener una CLI privada de Shopify pequena, legible y facil de extender.
+Keep a small, readable, and easy-to-extend private Shopify CLI.
 
-## Principios
+## Principles
 
-- priorizar soluciones pequenas y mantenibles
-- evitar abstracciones prematuras
-- no introducir dependencias grandes para problemas pequenos
-- mantener comportamiento explicito y nombres claros
-- no abrir nuevas areas hasta cerrar el vertical actual
+- prioritize small, maintainable solutions
+- avoid premature abstractions
+- do not introduce large dependencies for small problems
+- keep behavior explicit and names clear
+- do not open new areas until the current vertical is closed
 
-## Vertical actual
+## Current vertical
 
-El MVP activo cubre:
+The active MVP covers:
 
-- configuracion multi-tienda
-- autenticacion Shopify con `clientId` y `clientSecret`
-- compatibilidad opcional con `accessToken` legacy
+- multi-store configuration
+- Shopify authentication with `clientId` and `clientSecret`
+- optional legacy `accessToken` compatibility
 - `shop info`
 - `products list`
 - `products get`
 
-## Estructura esperada
+## Expected structure
 
-- `src/index.ts`: entrada de la CLI
-- `src/config.ts`: lectura y escritura de `~/.store-manager/stores.json`
-- `src/client.ts`: token exchange y llamadas GraphQL
-- `src/commands/*`: definicion de subcomandos
-- `src/graphql/*`: queries GraphQL puras
-- `src/utils/output.ts`: render de tabla y JSON
+- `src/index.ts`: CLI entry point
+- `src/config.ts`: read and write `~/.store-manager/stores.json`
+- `src/client.ts`: token exchange and GraphQL calls
+- `src/commands/*`: subcommand definitions
+- `src/graphql/*`: pure GraphQL queries
+- `src/utils/output.ts`: table and JSON rendering
 
-## Reglas de implementacion
+## Implementation rules
 
-- mantener el cliente HTTP en `fetch` nativo salvo necesidad clara
-- fijar una `SHOPIFY_API_VERSION` por defecto y permitir override por env
-- soportar tanto `clientId/clientSecret` como `accessToken` en config
-- nunca imprimir secretos en logs o tablas
-- no introducir analytics, webhooks o bulk operations en el MVP
+- keep the HTTP client on native `fetch` unless there is a clear need
+- pin a default `SHOPIFY_API_VERSION` and allow override through env
+- support both `clientId/clientSecret` and `accessToken` in config
+- never print secrets in logs or tables
+- do not introduce analytics, webhooks, or bulk operations in the MVP
 
-## Reglas de documentacion
+## Documentation rules
 
-- escribir ayuda pensando en agentes, no en humanos con contexto implicito
-- cada comando debe explicar con claridad que entrada espera
-- cada comando debe indicar cuando espera un GID, un ID numerico o un handle
-- cada comando debe incluir al menos un ejemplo realista en `--help`
-- cuando un comando tenga una precondicion importante, debe aparecer en `--help`
-- cuando cambie el contrato de un comando, actualizar a la vez codigo, `--help`, `README.md` y este archivo si aplica
-- preferir lenguaje directo y operativo: que hace, que necesita, que devuelve
-- evitar texto de marketing o descripciones vagas
+- all repository documentation must be written in English
+- keep `README.md`, `AGENTS.md`, help text, plans, and any new docs in English only
+- if you edit existing documentation that is not in English, translate it to English in the same change
+- write help for agents, not for humans relying on implicit context
+- each command must clearly explain what input it expects
+- each command must say whether it expects a GID, a numeric ID, or a handle
+- each command must include at least one realistic example in `--help`
+- when a command has an important precondition, it must appear in `--help`
+- when a command contract changes, update code, `--help`, `README.md`, and this file together when applicable
+- prefer direct, operational language: what it does, what it needs, what it returns
+- avoid marketing language or vague descriptions
 
-## Convencion para ayuda CLI
+## CLI help convention
 
-Usar `addHelpText("after", ...)` en Commander para anadir:
+Use `addHelpText("after", ...)` in Commander to add:
 
-1. una linea corta de contexto
-2. ejemplos copiables
-3. notas de formato o identificadores si hacen falta
+1. a short context line
+2. copyable examples
+3. notes about formats or identifiers when needed
 
-Ejemplo de claridad correcta:
+Correct clarity examples:
 
-- `products get` debe dejar claro si acepta GID, ID numerico o `--handle`
-- `config add` debe dejar claro que `--domain` tiene que ser `*.myshopify.com`
+- `products get` must make it clear whether it accepts a GID, a numeric ID, or `--handle`
+- `config add` must make it clear that `--domain` has to be `*.myshopify.com`
 
-## Flujo de trabajo
+## Workflow
 
-1. Cambiar lo minimo necesario.
-2. Compilar con `npm run build`.
-3. Validar tipos con `npm run typecheck`.
-4. Ejecutar tests si existen.
-5. Actualizar documentacion cuando cambie el contrato.
+1. Change as little as necessary.
+2. Build with `npm run build`.
+3. Validate types with `npm run typecheck`.
+4. Run tests if they exist.
+5. Update documentation when a command contract changes.
 
-## Documentacion espejo
+## Mirror documentation
 
-`CLAUDE.md` debe apuntar a este mismo documento para evitar divergencia.
+`CLAUDE.md` must point to this same document to avoid divergence.

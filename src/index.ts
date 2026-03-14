@@ -11,7 +11,7 @@ const program = new Command();
 
 program
   .name("store-manager")
-  .description("CLI privada para gestionar tiendas Shopify")
+  .description("Private CLI for managing Shopify stores")
   .version("0.1.0")
   .option("--store <alias>", "Configured store alias");
 
