@@ -25,6 +25,9 @@ MVP in progress with focus on:
 - `customers get`
 - `customers search`
 - `customers orders`
+- `gift-cards list`
+- `gift-cards get`
+- `gift-cards create`
 - `financial transactions`
 - `financial refund`
 - `financial summary`
@@ -177,6 +180,9 @@ shopfleet customers list --limit 10
 shopfleet customers search maria@example.com
 shopfleet customers get 1234567890 --format table
 shopfleet customers orders 1234567890 --limit 10
+shopfleet gift-cards list --limit 10
+shopfleet gift-cards get 1234567890 --format table
+shopfleet gift-cards create --value 25
 shopfleet financial transactions 1234567890
 shopfleet financial refund 1234567890 --line-items 987654321:1 --force
 shopfleet financial summary --from 2026-03-01 --to 2026-03-14
@@ -264,6 +270,30 @@ shopfleet customers search maria
 shopfleet customers get gid://shopify/Customer/1234567890
 shopfleet customers orders 1234567890 --sort processed-at
 ```
+
+## Gift Cards
+
+`gift-cards list` supports raw Shopify gift card search syntax:
+
+```bash
+shopfleet gift-cards list --query "status:enabled balance_status:partial"
+shopfleet gift-cards list --query "last_characters:1234" --format json
+```
+
+`gift-cards get` accepts a Shopify gift card GID or numeric gift card ID.
+`gift-cards create` creates a new gift card and returns the generated code in the response.
+
+```bash
+shopfleet gift-cards get gid://shopify/GiftCard/1234567890
+shopfleet gift-cards create --value 25
+shopfleet gift-cards create --value 100 --recipient-email maria@example.com --recipient-message "Happy birthday" --notify
+```
+
+Notes:
+
+- `--expires` expects `YYYY-MM-DD`.
+- `--recipient-email` must match an existing Shopify customer email because Shopify recipient data uses customer IDs.
+- Notifications are disabled by default. Pass `--notify` to let Shopify send them.
 
 ## Inventory
 

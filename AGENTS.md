@@ -36,6 +36,9 @@ The active MVP covers:
 - `customers get`
 - `customers search`
 - `customers orders`
+- `gift-cards list`
+- `gift-cards get`
+- `gift-cards create`
 - `financial transactions`
 - `financial refund`
 - `financial summary`

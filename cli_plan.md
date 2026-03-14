@@ -25,6 +25,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `customers get`
 - `customers search`
 - `customers orders`
+- `gift-cards list`
+- `gift-cards get`
+- `gift-cards create`
 - `financial transactions`
 - `financial refund`
 - `financial summary`
@@ -66,6 +69,7 @@ Notes:
 - order cancellation is implemented but was not executed against a real order
 - financial refund is implemented but was not executed against a real order
 - collections commands were validated in read-only mode against a real store
+- gift card commands are implemented but not yet validated against a real sandbox store
 
 ### In progress
 
@@ -294,11 +298,11 @@ Summary flags: `--limit`, `--query`, `--status`, `--financial-status`, `--fulfil
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `gift-cards list` | `giftCards` query | List gift cards |
-| pending | `gift-cards get <id>` | `giftCard` query | Gift card detail |
-| pending | `gift-cards create` | `giftCardCreate` | Create gift card |
+| done | `gift-cards list` | `giftCards` query | List gift cards |
+| done | `gift-cards get <id>` | `giftCard` query | Gift card detail |
+| done | `gift-cards create` | `giftCardCreate` | Create gift card |
 
-Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `--recipient-message`
+Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `--recipient-message`, `--notify`
 
 ### 4.10 Content (4 commands)
 
