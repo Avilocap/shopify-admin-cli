@@ -25,6 +25,9 @@ MVP in progress with focus on:
 - `customers get`
 - `customers search`
 - `customers orders`
+- `inventory levels`
+- `inventory adjust`
+- `inventory locations`
 - `collections list`
 - `collections get`
 - `collections products`
@@ -106,6 +109,9 @@ shopfleet customers list --limit 10
 shopfleet customers search maria@example.com
 shopfleet customers get 1234567890 --format table
 shopfleet customers orders 1234567890 --limit 10
+shopfleet inventory levels --sku ABC-123
+shopfleet inventory adjust --item-id 30322695 --location-id 124656943 --quantity -4
+shopfleet inventory locations --limit 10
 shopfleet collections list --limit 10
 shopfleet collections get 1234567890 --format table
 shopfleet collections products 1234567890 --limit 10
@@ -139,7 +145,8 @@ shopfleet products delete my-updated-product --handle --force
 ```
 
 Current write scope is limited to top-level product fields.
-Variants, media, options, and inventory stay out of scope for now.
+Variants, media, and options stay out of scope here.
+Inventory operations live under the dedicated `inventory` command group.
 
 ## Orders
 
@@ -180,6 +187,40 @@ shopfleet customers search maria
 shopfleet customers get gid://shopify/Customer/1234567890
 shopfleet customers orders 1234567890 --sort processed-at
 ```
+
+## Inventory
+
+`inventory levels` lists inventory quantities per inventory item and location:
+
+```bash
+shopfleet inventory levels --limit 20
+shopfleet inventory levels --sku ABC-123 --name available
+shopfleet inventory levels --item-id 30322695 --location-id 124656943 --format json
+```
+
+`inventory levels` accepts an inventory item GID or numeric inventory item ID with `--item-id`.
+`--location-id` accepts a location GID or numeric location ID and narrows each inventory item to that location.
+`--name` reads one inventory quantity state at a time and defaults to `available`.
+
+`inventory adjust` applies a signed delta at one location:
+
+```bash
+shopfleet inventory adjust --item-id 30322695 --location-id 124656943 --quantity -4
+shopfleet inventory adjust --item-id gid://shopify/InventoryItem/30322695 --location-id gid://shopify/Location/124656943 --quantity 10 --reference gid://shopfleet/InventoryAdjustment/2026-03-14-001
+```
+
+`inventory adjust` expects an inventory item GID or numeric ID plus a location GID or numeric ID.
+`--quantity` is a signed delta, not an absolute quantity.
+Shopify requires `--ledger-document-uri` when `--name` is not `available`.
+
+`inventory locations` lists stock locations:
+
+```bash
+shopfleet inventory locations --limit 20
+shopfleet inventory locations --query 'name:warehouse' --include-inactive
+```
+
+Locations are active-only by default unless `--include-inactive` is set.
 
 ## Collections
 

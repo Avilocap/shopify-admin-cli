@@ -25,6 +25,9 @@ Multi-store Shopify CLI built on the GraphQL Admin API.
 - `customers get`
 - `customers search`
 - `customers orders`
+- `inventory levels`
+- `inventory adjust`
+- `inventory locations`
 - `collections list`
 - `collections get`
 - `collections products`
@@ -226,11 +229,13 @@ Flags: `--limit`, `--after`, `--sort`, `--reverse`
 
 | Status | Command | GraphQL operation | Description |
 | --- | --- | --- | --- |
-| pending | `inventory levels` | `inventoryItems` query | Inventory levels |
-| pending | `inventory adjust` | `inventoryAdjustQuantities` | Adjust quantity |
-| pending | `inventory locations` | `locations` query | List locations |
+| done | `inventory levels` | `inventoryItems` query | Inventory levels |
+| done | `inventory adjust` | `inventoryAdjustQuantities` | Adjust quantity |
+| done | `inventory locations` | `locations` query | List locations |
 
-Adjust flags: `--item-id`, `--location-id`, `--quantity`
+Level flags: `--item-id`, `--location-id`, `--sku`, `--name`, `--limit`, `--after`
+Adjust flags: `--item-id`, `--location-id`, `--quantity`, `--name`, `--reason`
+Location flags: `--limit`, `--after`, `--query`, `--include-inactive`, `--include-legacy`
 
 ### 4.5 Collections (3 commands)
 
@@ -341,5 +346,5 @@ Create flags: `--value`, `--code`, `--note`, `--expires`, `--recipient-email`, `
 - `orders get`
 - `customers list`
 - `customers get`
-- `inventory levels`
-- `inventory locations`
+- `inventory adjust`
+- `discounts list`

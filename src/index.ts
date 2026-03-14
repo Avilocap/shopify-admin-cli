@@ -6,6 +6,7 @@ import { Command } from "commander";
 import { registerCollectionCommands } from "./commands/collections.js";
 import { registerConfigCommands } from "./commands/config.js";
 import { registerCustomerCommands } from "./commands/customers.js";
+import { registerInventoryCommands } from "./commands/inventory.js";
 import { registerOrderCommands } from "./commands/orders.js";
 import { registerProductCommands } from "./commands/products.js";
 import { registerShopCommands } from "./commands/shop.js";
@@ -23,6 +24,7 @@ registerShopCommands(program);
 registerProductCommands(program);
 registerOrderCommands(program);
 registerCustomerCommands(program);
+registerInventoryCommands(program);
 registerCollectionCommands(program);
 
 program.showHelpAfterError();
