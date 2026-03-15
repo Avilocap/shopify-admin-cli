@@ -45,6 +45,7 @@ Use command help to confirm exact input, but these rules are important:
 
 - `products get|update|delete` accept a product GID or numeric product ID by default. Use `--handle` to treat the argument as a handle.
 - `products get --include-media` adds `descriptionHtml` and up to 10 product images with metadata. Without that flag, keep the response lightweight.
+- `products variants update` accepts a product variant GID or numeric variant ID.
 - `products list|search --category` accept a taxonomy category GID or raw taxonomy category ID and map it to Shopify's `category_id` search filter.
 - `products create|update --category` accept a taxonomy category GID or raw taxonomy category ID.
 - `products update --clear-category` removes the current product category.
@@ -53,9 +54,13 @@ Use command help to confirm exact input, but these rules are important:
 - `orders get|transactions|cancel` accept an order GID or numeric order ID.
 - `customers get|orders` accept a customer GID or numeric customer ID.
 - `gift-cards get` accepts a gift card GID or numeric ID.
-- `collections get|products` accept a collection GID or numeric ID.
+- `collections get|products|update` accept a collection GID or numeric ID.
+- `collections update` edits top-level collection fields such as title, HTML description, handle, SEO, sort order, and template suffix.
+- `collections update --redirect-new-handle` is only valid when `--handle` is also present.
 - `inventory adjust --item-id` expects an inventory item GID or numeric ID.
 - `inventory adjust --location-id` expects a location GID or numeric ID.
+- `inventory set --item-id` expects an inventory item GID or numeric ID.
+- `inventory set --location-id` expects a location GID or numeric ID.
 - `fulfillment create --fulfillment-order-id` expects a fulfillment order GID or numeric ID.
 - `fulfillment create --line-items` expects fulfillment order line item IDs, not order line item IDs.
 
@@ -65,13 +70,16 @@ These commands mutate Shopify data and should be treated as real store operation
 
 - `products create`
 - `products update`
+- `products variants update`
 - `products delete`
+- `collections update`
 - `orders cancel`
 - `gift-cards create`
 - `pages create`
 - `blogs create-article`
 - `financial refund`
 - `inventory adjust`
+- `inventory set`
 - `fulfillment create`
 - `fulfillment tracking`
 - `discounts create`
@@ -80,9 +88,12 @@ Notes:
 
 - `orders cancel` is explicitly destructive and requires `--force`.
 - `products delete` also requires careful confirmation because it removes catalog data.
+- `collections update` changes live storefront/admin collection metadata and should be treated like a real catalog edit.
 - Product categories come from Shopify taxonomy and are assigned to products; the CLI does not create or edit taxonomy categories themselves.
+- `products variants update` splits writes between product variant fields and the linked inventory item when needed.
 - `discounts create` requires exactly one of `--percentage` or `--amount`.
 - `inventory adjust --quantity` is a signed delta, not an absolute quantity.
+- `inventory set --quantity` is an absolute quantity, not a delta.
 - Analytics commands are read-only and implemented on ShopifyQL.
 
 ## Safe Validation Recipes

@@ -22,7 +22,7 @@ const program = new Command();
 program
   .name("shopfleet")
   .description("Private CLI for managing Shopify stores")
-  .version("0.1.7")
+  .version("0.1.8")
   .option("--store <alias>", "Configured store alias");
 
 registerConfigCommands(program);

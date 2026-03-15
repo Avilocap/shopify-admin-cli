@@ -107,6 +107,41 @@ export const INVENTORY_ADJUST_MUTATION = `
   }
 `;
 
+export const INVENTORY_SET_MUTATION = `
+  mutation InventorySetQuantities(
+    $input: InventorySetQuantitiesInput!,
+    $quantityNames: [String!],
+    $idempotencyKey: String!
+  ) @idempotent(key: $idempotencyKey) {
+    inventorySetQuantities(input: $input) {
+      inventoryAdjustmentGroup {
+        id
+        createdAt
+        reason
+        referenceDocumentUri
+        changes(quantityNames: $quantityNames) {
+          name
+          delta
+          quantityAfterChange
+          ledgerDocumentUri
+          item {
+            id
+            sku
+          }
+          location {
+            id
+            name
+          }
+        }
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
 export const LOCATIONS_LIST_QUERY = `
   query LocationsList(
     $first: Int!,

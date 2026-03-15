@@ -14,6 +14,7 @@ Available commands and capabilities:
 - `products search`
 - `products create`
 - `products update`
+- `products variants update`
 - `products delete`
 - `orders list`
 - `orders get`
@@ -35,10 +36,12 @@ Available commands and capabilities:
 - `financial summary`
 - `inventory levels`
 - `inventory adjust`
+- `inventory set`
 - `inventory locations`
 - `collections list`
 - `collections get`
 - `collections products`
+- `collections update`
 - `fulfillment list`
 - `fulfillment create`
 - `fulfillment tracking`
@@ -188,6 +191,7 @@ shopfleet products get 1234567890
 shopfleet products get paso-macarena-miniatura --handle
 shopfleet products create --title "Test product" --status draft
 shopfleet products update 1234567890 --category sg-4-17-2-17
+shopfleet products variants update 1234567890 --sku MINI-001 --price 39.95
 shopfleet products delete 1234567890 --force
 shopfleet orders list --limit 10
 shopfleet orders get 1234567890 --format table
@@ -209,10 +213,12 @@ shopfleet financial refund 1234567890 --line-items 987654321:1 --force
 shopfleet financial summary --from 2026-03-01 --to 2026-03-14
 shopfleet inventory levels --sku ABC-123
 shopfleet inventory adjust --item-id 30322695 --location-id 124656943 --quantity -4
+shopfleet inventory set --item-id 30322695 --location-id 124656943 --quantity 12
 shopfleet inventory locations --limit 10
 shopfleet collections list --limit 10
 shopfleet collections get 1234567890 --format table
 shopfleet collections products 1234567890 --limit 10
+shopfleet collections update 1234567890 --title "Holy Week 2026"
 shopfleet fulfillment list --limit 10
 shopfleet fulfillment create --order-id 1234567890
 shopfleet fulfillment tracking 255858046 --tracking-number 1Z9999999999999999
@@ -244,7 +250,7 @@ shopfleet products list --query 'tag:"miniatura" status:active' --sort updated-a
 ```
 
 `products search` uses Shopify's default search and sorts by relevance.
-`products get` returns the basic product fields by default, including the current Shopify taxonomy category when one is assigned. Add `--include-media` to include `descriptionHtml` and up to 10 product images as URLs plus metadata.
+`products get` returns the basic product fields by default, including the current Shopify taxonomy category when one is assigned. Add `--include-media` to include `descriptionHtml`, up to 10 product images as URLs plus metadata, and detailed variant rows with `inventoryItemId` values.
 
 Write commands are also available:
 
@@ -256,14 +262,17 @@ shopfleet products update 1234567890 --category sg-4-17-2-17
 shopfleet products update 1234567890 --clear-category
 shopfleet products update my-product --handle --status draft --new-handle my-updated-product
 shopfleet products update 1234567890 --seo-title "New SEO title" --seo-description "Updated search snippet"
+shopfleet products variants update 1234567890 --sku MINI-001 --price 39.95 --compare-at-price 49.95
+shopfleet products variants update 1234567890 --tracked false --requires-shipping false --cost 12.50
+shopfleet products variants update 1234567890 --metafield custom.material:single_line_text_field:resin
 shopfleet products delete my-updated-product --handle --force
 ```
 
 For category-aware workflows, `--category` accepts either a taxonomy category GID or a raw taxonomy category ID such as `sg-4-17-2-17`. Use `--clear-category` to remove the current category, and `--delete-conflicting-metafields` when Shopify requires constrained metafields to be cleared during a category change.
 
 Product write commands support top-level product fields, including optional `--seo-title`, `--seo-description`, and taxonomy category assignment.
-Variants, media, and options are not modified by these commands.
-Inventory operations live under the dedicated `inventory` command group.
+Use `products variants update` for variant pricing, barcode, tax fields, metafields, and linked inventory item metadata such as SKU, tracked, shipping, cost, and origin codes.
+Inventory quantity changes live under the dedicated `inventory` command group.
 
 ## Orders
 
@@ -413,6 +422,17 @@ shopfleet inventory adjust --item-id gid://shopify/InventoryItem/30322695 --loca
 `--quantity` is a signed delta, not an absolute quantity.
 Shopify requires `--ledger-document-uri` when `--name` is not `available`.
 
+`inventory set` writes an absolute quantity at one location:
+
+```bash
+shopfleet inventory set --item-id 30322695 --location-id 124656943 --quantity 12
+shopfleet inventory set --item-id gid://shopify/InventoryItem/30322695 --location-id gid://shopify/Location/124656943 --quantity 8 --change-from 10
+```
+
+`inventory set` expects an inventory item GID or numeric ID plus a location GID or numeric ID.
+`--quantity` is the target quantity, not a delta.
+`--change-from` is optional but recommended when coordinating concurrent stock updates.
+
 `inventory locations` lists stock locations:
 
 ```bash
@@ -488,6 +508,18 @@ shopfleet collections list --query 'title:miniatura'
 
 `collections get` accepts a Shopify collection GID or numeric collection ID.
 `collections products` lists products inside the target collection with manual pagination.
+`collections update` edits top-level collection fields such as title, HTML description, handle, SEO fields, sort order, and template suffix.
+
+```bash
+shopfleet collections update 1234567890 --title "Holy Week 2026"
+shopfleet collections update 1234567890 --description "<p>Featured collection</p>"
+shopfleet collections update 1234567890 --handle holy-week-2026 --redirect-new-handle
+shopfleet collections update 1234567890 --seo-title "Holy Week" --seo-description "Featured collection" --template-suffix seasonal
+```
+
+Changing the title does not change the handle automatically.
+Use `--redirect-new-handle` only together with `--handle`.
+This update command focuses on top-level collection fields and does not edit smart collection rules, images, or metafields.
 
 ## Discounts
 

@@ -38,7 +38,7 @@ Store config lives at `~/.shopfleet/stores.json` and the CLI migrates from `~/.s
 
 - Read-only task: `shop info`, list/get/search commands, analytics, and other non-mutating reads are generally safe on an existing configured alias.
 - Local config task: `config add`, `config remove`, `config set-default`, and config migration work can be tested locally without touching Shopify if you use fake credentials.
-- Write task: product create/update/delete, order cancel, gift card create, page create, blog article create, refund, inventory adjust, fulfillment create/tracking, and discount create all mutate store data. Production use is valid, but these commands should be executed deliberately against the intended alias.
+- Write task: product create/update/delete, product variant updates, collection updates, order cancel, gift card create, page create, blog article create, refund, inventory adjust/set, fulfillment create/tracking, and discount create all mutate store data. Production use is valid, but these commands should be executed deliberately against the intended alias.
 
 ### 3. Choose the safest validation path
 
@@ -78,6 +78,7 @@ Prefer `--format table` when you want concise terminal inspection and `--format 
 - Auth supports either `clientId` + `clientSecret` or legacy `accessToken`.
 - The CLI talks to Shopify Admin GraphQL and keeps analytics read-only through ShopifyQL.
 - Shopify taxonomy categories are read-only references from Shopify; product commands may assign, filter, or clear a product category, but they do not mutate the taxonomy itself.
+- Collection title changes do not change the handle automatically; handle updates should be explicit and may optionally request a redirect.
 - The config layer normalizes domains and requires the Shopify admin domain in `*.myshopify.com` format.
 
 ## Editing Workflow

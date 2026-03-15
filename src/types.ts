@@ -54,9 +54,28 @@ export interface ProductListItem {
 }
 
 export interface ProductVariantItem {
+  barcode?: string | null;
+  compareAtPrice?: string | null;
   id: string;
+  inventoryItem?: {
+    countryCodeOfOrigin?: string | null;
+    harmonizedSystemCode?: string | null;
+    id: string;
+    legacyResourceId: number | string;
+    provinceCodeOfOrigin?: string | null;
+    requiresShipping?: boolean | null;
+    tracked: boolean;
+    unitCost?: {
+      amount: string;
+      currencyCode: string;
+    } | null;
+  } | null;
+  inventoryPolicy?: string;
   title: string;
   sku: string | null;
   price: string | null;
   inventoryQuantity: number | null;
+  showUnitPrice?: boolean;
+  taxCode?: string | null;
+  taxable?: boolean;
 }

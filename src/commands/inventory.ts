@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import chalk from "chalk";
 import { Command } from "commander";
 
@@ -7,6 +9,7 @@ import {
   INVENTORY_ADJUST_MUTATION,
   INVENTORY_LEVEL_AT_LOCATION_QUERY,
   INVENTORY_LEVELS_QUERY,
+  INVENTORY_SET_MUTATION,
   LOCATIONS_LIST_QUERY,
 } from "../graphql/inventory.js";
 import type { GraphQlUserError, OutputFormat, PageInfo } from "../types.js";
@@ -74,6 +77,13 @@ interface InventoryAdjustResponse {
   };
 }
 
+interface InventorySetResponse {
+  inventorySetQuantities: {
+    inventoryAdjustmentGroup: InventoryAdjustGroup | null;
+    userErrors: GraphQlUserError[];
+  };
+}
+
 interface LocationNode {
   address: {
     formatted: string[];
@@ -112,6 +122,18 @@ interface InventoryAdjustOptions {
   format: OutputFormat;
   itemId: string;
   ledgerDocumentUri?: string;
+  locationId: string;
+  name?: string;
+  quantity: string;
+  reason?: string;
+  reference?: string;
+}
+
+interface InventorySetOptions {
+  changeFrom?: string;
+  format: OutputFormat;
+  idempotencyKey?: string;
+  itemId: string;
   locationId: string;
   name?: string;
   quantity: string;
@@ -228,6 +250,71 @@ Notes:
 
       printInventoryAdjustResult(
         data.inventoryAdjustQuantities.inventoryAdjustmentGroup,
+        options.format,
+      );
+    });
+
+  inventory
+    .command("set")
+    .description("Set an absolute inventory quantity at one location")
+    .requiredOption("--item-id <id>", "Inventory item GID or numeric ID")
+    .requiredOption("--location-id <id>", "Location GID or numeric ID")
+    .requiredOption("--quantity <quantity>", "Absolute quantity to set")
+    .option(
+      "--change-from <quantity>",
+      "Current quantity expected by the caller. Use this for optimistic concurrency checks",
+    )
+    .option(
+      "--name <quantityName>",
+      "Inventory quantity name to set, for example available or committed",
+      "available",
+    )
+    .option("--reason <reason>", "Adjustment reason", "correction")
+    .option("--reference <uri>", "Reference document URI for the adjustment group")
+    .option(
+      "--idempotency-key <key>",
+      "Optional idempotency key. A random UUID is used when omitted",
+    )
+    .option("--format <format>", "table or json", "json")
+    .addHelpText(
+      "after",
+      `
+Context:
+  This command sets an absolute inventory quantity. Use --change-from when you want Shopify to reject stale writes.
+
+Examples:
+  shopfleet inventory set --item-id 30322695 --location-id 124656943 --quantity 12
+  shopfleet inventory set --item-id gid://shopify/InventoryItem/30322695 --location-id gid://shopify/Location/124656943 --quantity 8 --change-from 10
+
+Notes:
+  --quantity is the target quantity, not a delta.
+  --item-id expects an inventory item GID or numeric inventory item ID.
+  --location-id expects a location GID or numeric location ID.
+  --change-from is optional but recommended when coordinating concurrent stock updates.
+      `,
+    )
+    .action(async (options: InventorySetOptions, command: Command) => {
+      const storeAlias = command.optsWithGlobals().store as string | undefined;
+      const store = await resolveStore(storeAlias);
+      const client = new ShopifyClient({ store });
+      const quantityName = parseInventoryQuantityName(options.name);
+      const data = await client.query<InventorySetResponse>({
+        query: INVENTORY_SET_MUTATION,
+        variables: {
+          idempotencyKey: options.idempotencyKey?.trim() || randomUUID(),
+          input: buildInventorySetInput(options),
+          quantityNames: [quantityName],
+        },
+      });
+
+      assertNoInventoryUserErrors(data.inventorySetQuantities.userErrors);
+
+      if (!data.inventorySetQuantities.inventoryAdjustmentGroup) {
+        throw new Error("Shopify did not return the inventory adjustment group.");
+      }
+
+      printInventoryAdjustResult(
+        data.inventorySetQuantities.inventoryAdjustmentGroup,
         options.format,
       );
     });
@@ -520,6 +607,27 @@ export function buildInventoryAdjustInput(
   };
 }
 
+export function buildInventorySetInput(
+  options: InventorySetOptions,
+): Record<string, unknown> {
+  return {
+    name: parseInventoryQuantityName(options.name ?? "available"),
+    quantities: [
+      {
+        changeFromQuantity:
+          options.changeFrom === undefined
+            ? null
+            : parseInventoryAbsoluteQuantity(options.changeFrom, "--change-from"),
+        inventoryItemId: normalizeInventoryItemId(options.itemId),
+        locationId: normalizeLocationId(options.locationId),
+        quantity: parseInventoryAbsoluteQuantity(options.quantity, "--quantity"),
+      },
+    ],
+    reason: parseInventoryReason(options.reason),
+    referenceDocumentUri: sanitizeRawQuery(options.reference) ?? undefined,
+  };
+}
+
 export function normalizeInventoryItemId(input: string): string {
   return normalizeShopifyId(input, "InventoryItem");
 }
@@ -537,6 +645,23 @@ export function parseInventoryDelta(input: string): number {
 
   if (value === 0) {
     throw new Error("--quantity must be different from zero.");
+  }
+
+  return value;
+}
+
+export function parseInventoryAbsoluteQuantity(
+  input: string,
+  flagName: "--change-from" | "--quantity" = "--quantity",
+): number {
+  const value = Number(input);
+
+  if (!Number.isInteger(value)) {
+    throw new Error(`${flagName} must be a whole number.`);
+  }
+
+  if (value < 0) {
+    throw new Error(`${flagName} must be zero or greater.`);
   }
 
   return value;

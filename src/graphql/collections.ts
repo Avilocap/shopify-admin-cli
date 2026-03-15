@@ -45,6 +45,12 @@ export const COLLECTION_GET_QUERY = `
       title
       handle
       description
+      descriptionHtml
+      seo {
+        title
+        description
+      }
+      templateSuffix
       updatedAt
       sortOrder
       productsCount {
@@ -86,6 +92,38 @@ export const COLLECTION_PRODUCTS_QUERY = `
           endCursor
           hasNextPage
         }
+      }
+    }
+  }
+`;
+
+export const COLLECTION_UPDATE_MUTATION = `
+  mutation CollectionUpdate($input: CollectionInput!) {
+    collectionUpdate(input: $input) {
+      collection {
+        id
+        title
+        handle
+        description
+        descriptionHtml
+        seo {
+          title
+          description
+        }
+        templateSuffix
+        updatedAt
+        sortOrder
+        productsCount {
+          count
+          precision
+        }
+        ruleSet {
+          appliedDisjunctively
+        }
+      }
+      userErrors {
+        field
+        message
       }
     }
   }

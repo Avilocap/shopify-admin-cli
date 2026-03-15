@@ -4,12 +4,15 @@ import { Command } from "commander";
 import { ShopifyClient } from "../client.js";
 import { resolveStore } from "../config.js";
 import {
+  INVENTORY_ITEM_UPDATE_MUTATION,
   PRODUCT_BY_HANDLE_QUERY,
   PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY,
   PRODUCT_CREATE_MUTATION,
   PRODUCT_DELETE_MUTATION,
   PRODUCT_GET_QUERY,
   PRODUCT_GET_WITH_MEDIA_QUERY,
+  PRODUCT_VARIANT_GET_QUERY,
+  PRODUCT_VARIANTS_BULK_UPDATE_MUTATION,
   PRODUCT_UPDATE_MUTATION,
   PRODUCTS_LIST_QUERY,
 } from "../graphql/products.js";
@@ -158,6 +161,74 @@ interface ProductDeleteOptions {
   handle?: boolean;
 }
 
+interface ProductVariantDetails extends ProductVariantItem {
+  product: {
+    handle: string;
+    id: string;
+    title: string;
+  };
+}
+
+interface ProductVariantGetResponse {
+  productVariant: ProductVariantDetails | null;
+}
+
+interface ProductVariantMutationResponse {
+  product: {
+    handle: string;
+    id: string;
+    title: string;
+  } | null;
+  productVariants: ProductVariantItem[];
+  userErrors: GraphQlUserError[];
+}
+
+interface ProductVariantsBulkUpdateResponse {
+  productVariantsBulkUpdate: ProductVariantMutationResponse;
+}
+
+interface InventoryItemMutationResponse {
+  inventoryItem: {
+    harmonizedSystemCode: string | null;
+    id: string;
+    legacyResourceId: number | string;
+    requiresShipping: boolean | null;
+    sku: string | null;
+    tracked: boolean;
+    unitCost: {
+      amount: string;
+      currencyCode: string;
+    } | null;
+  } | null;
+  userErrors: GraphQlUserError[];
+}
+
+interface InventoryItemUpdateResponse {
+  inventoryItemUpdate: InventoryItemMutationResponse;
+}
+
+interface ProductVariantUpdateOptions {
+  barcode?: string;
+  clearBarcode?: boolean;
+  clearCompareAtPrice?: boolean;
+  clearTaxCode?: boolean;
+  compareAtPrice?: string;
+  cost?: string;
+  countryCodeOfOrigin?: string;
+  format: OutputFormat;
+  harmonizedSystemCode?: string;
+  inventoryPolicy?: string;
+  metafield?: string[];
+  price?: string;
+  provinceCodeOfOrigin?: string;
+  requiresShipping?: string;
+  showUnitPrice?: string;
+  sku?: string;
+  taxCode?: string;
+  taxable?: string;
+  tracked?: string;
+}
+
 interface ProductMutationResponse {
   product: ProductDetails | null;
   userErrors: GraphQlUserError[];
@@ -296,7 +367,7 @@ Examples:
 Notes:
   Without --handle, the argument must be a Shopify product GID or numeric product ID.
   Product details include the current Shopify taxonomy category when set.
-  Use --include-media to include descriptionHtml and up to 10 product images.
+  Use --include-media to include descriptionHtml, up to 10 product images, and detailed variant rows with inventory item IDs.
       `,
     )
     .action(
@@ -413,12 +484,12 @@ Notes:
       "after",
       `
 Examples:
-  shopfleet products update 1234567890 --title "Nuevo titulo"
+  shopfleet products update 1234567890 --title "Updated title"
   shopfleet products update 1234567890 --category sg-4-17-2-17
   shopfleet products update 1234567890 --clear-category
   shopfleet products update my-handle --handle --status draft --tags test,cli
-  shopfleet products update 1234567890 --new-handle nuevo-handle
-  shopfleet products update 1234567890 --seo-title "Nuevo SEO title" --seo-description "Nueva SEO description"
+  shopfleet products update 1234567890 --new-handle updated-handle
+  shopfleet products update 1234567890 --seo-title "Updated SEO title" --seo-description "Updated SEO description"
 
 Notes:
   --category accepts a taxonomy category GID or a raw taxonomy category ID.
@@ -450,6 +521,126 @@ Notes:
         printProductMutationResult(data.productUpdate.product, options.format);
       },
     );
+
+  const productVariants = products
+    .command("variants")
+    .description("Inspect and modify product variants");
+
+  productVariants
+    .command("update")
+    .description("Update one product variant and its linked inventory item metadata")
+    .argument("<id>", "Product variant GID or numeric ID")
+    .option("--sku <sku>", "Variant SKU")
+    .option("--price <amount>", "Variant price as a non-negative decimal")
+    .option(
+      "--compare-at-price <amount>",
+      "Compare-at price as a non-negative decimal",
+    )
+    .option("--clear-compare-at-price", "Remove the current compare-at price")
+    .option("--barcode <barcode>", "Barcode")
+    .option("--clear-barcode", "Remove the current barcode")
+    .option("--taxable <value>", "Whether the variant is taxable: true or false")
+    .option("--tax-code <code>", "Tax code")
+    .option("--clear-tax-code", "Remove the current tax code")
+    .option(
+      "--inventory-policy <policy>",
+      "Inventory policy: deny or continue",
+    )
+    .option(
+      "--show-unit-price <value>",
+      "Whether to show the unit price: true or false",
+    )
+    .option("--cost <amount>", "Inventory item unit cost as a non-negative decimal")
+    .option(
+      "--tracked <value>",
+      "Whether the linked inventory item is tracked: true or false",
+    )
+    .option(
+      "--requires-shipping <value>",
+      "Whether the linked inventory item requires shipping: true or false",
+    )
+    .option(
+      "--country-code-of-origin <code>",
+      "Inventory item country of origin as an ISO 3166-1 alpha-2 code",
+    )
+    .option(
+      "--province-code-of-origin <code>",
+      "Inventory item province or state of origin code",
+    )
+    .option(
+      "--harmonized-system-code <code>",
+      "Inventory item harmonized system code",
+    )
+    .option(
+      "--metafield <entry>",
+      "Variant metafield in namespace.key:type:value format. Repeat the flag to send multiple metafields.",
+      collectRepeatedOption,
+    )
+    .option("--format <format>", "table or json", "json")
+    .addHelpText(
+      "after",
+      `
+Context:
+  This command updates one product variant. Variant pricing fields use the product mutation, while SKU and stock metadata use the linked inventory item.
+
+Examples:
+  shopfleet products variants update 1234567890 --sku MINI-001 --price 39.95
+  shopfleet products variants update gid://shopify/ProductVariant/1234567890 --compare-at-price 49.95 --barcode 8437000000012
+  shopfleet products variants update 1234567890 --tracked false --requires-shipping false --cost 12.50
+  shopfleet products variants update 1234567890 --metafield custom.material:single_line_text_field:resin --metafield custom.collection:single_line_text_field:2026
+
+Notes:
+  The argument expects a product variant GID or numeric variant ID.
+  Use --clear-compare-at-price, --clear-barcode, or --clear-tax-code to remove those optional values.
+  --metafield creates or updates variant metafields using namespace.key:type:value.
+      `,
+    )
+    .action(async (id: string, options: ProductVariantUpdateOptions, command: Command) => {
+      if (!hasVariantFieldUpdates(options) && !hasInventoryItemFieldUpdates(options)) {
+        throw new Error(
+          "Nothing to update. Pass at least one variant or inventory item field to modify.",
+        );
+      }
+
+      const storeAlias = command.optsWithGlobals().store as string | undefined;
+      const store = await resolveStore(storeAlias);
+      const client = new ShopifyClient({ store });
+      const variantId = normalizeProductVariantId(id);
+      const currentVariant = await getProductVariant(client, variantId);
+
+      if (hasVariantFieldUpdates(options)) {
+        const data = await client.query<ProductVariantsBulkUpdateResponse>({
+          query: PRODUCT_VARIANTS_BULK_UPDATE_MUTATION,
+          variables: {
+            productId: currentVariant.product.id,
+            variants: [buildProductVariantUpdateInput(currentVariant.id, options)],
+          },
+        });
+
+        assertNoUserErrors(data.productVariantsBulkUpdate.userErrors);
+      }
+
+      if (hasInventoryItemFieldUpdates(options)) {
+        const inventoryItemId = currentVariant.inventoryItem?.id;
+
+        if (!inventoryItemId) {
+          throw new Error("The variant is not linked to an inventory item.");
+        }
+
+        const data = await client.query<InventoryItemUpdateResponse>({
+          query: INVENTORY_ITEM_UPDATE_MUTATION,
+          variables: {
+            id: inventoryItemId,
+            input: buildInventoryItemUpdateInput(options),
+          },
+        });
+
+        assertNoUserErrors(data.inventoryItemUpdate.userErrors);
+      }
+
+      const updatedVariant = await getProductVariant(client, variantId);
+      printProductVariantDetails(updatedVariant, options.format);
+    });
 
   products
     .command("delete")
@@ -623,13 +814,31 @@ function printProductDetails(product: ProductDetails, includeMedia: boolean): vo
     process.stdout.write("\nVariants\n");
     printTable(
       product.variants.nodes.map((variant) => ({
+        barcode: variant.barcode ?? "",
+        compareAtPrice: variant.compareAtPrice ?? "",
         id: variant.id,
+        inventoryItemId: variant.inventoryItem?.id ?? "",
+        inventoryItemNumericId: variant.inventoryItem?.legacyResourceId ?? "",
+        inventoryPolicy: variant.inventoryPolicy ?? "",
         title: variant.title,
         sku: variant.sku ?? "",
         price: variant.price ?? "",
         inventoryQuantity: variant.inventoryQuantity,
+        tracked: variant.inventoryItem?.tracked ?? "",
       })),
-      ["id", "title", "sku", "price", "inventoryQuantity"],
+      [
+        "id",
+        "title",
+        "sku",
+        "barcode",
+        "price",
+        "compareAtPrice",
+        "inventoryQuantity",
+        "inventoryPolicy",
+        "inventoryItemId",
+        "inventoryItemNumericId",
+        "tracked",
+      ],
     );
   }
 }
@@ -644,6 +853,71 @@ function printProductMutationResult(
   }
 
   printProductDetails(product, false);
+}
+
+function printProductVariantDetails(
+  variant: ProductVariantDetails,
+  format: OutputFormat,
+): void {
+  if (format === "json") {
+    printJson(variant);
+    return;
+  }
+
+  printTable(
+    [
+      {
+        id: variant.id,
+        productId: variant.product.id,
+        productHandle: variant.product.handle,
+        productTitle: variant.product.title,
+        title: variant.title,
+        sku: variant.sku ?? "",
+        barcode: variant.barcode ?? "",
+        price: variant.price ?? "",
+        compareAtPrice: variant.compareAtPrice ?? "",
+        taxable: variant.taxable ?? "",
+        taxCode: variant.taxCode ?? "",
+        inventoryPolicy: variant.inventoryPolicy ?? "",
+        showUnitPrice: variant.showUnitPrice ?? "",
+        inventoryQuantity: variant.inventoryQuantity ?? "",
+        inventoryItemId: variant.inventoryItem?.id ?? "",
+        inventoryItemNumericId: variant.inventoryItem?.legacyResourceId ?? "",
+        tracked: variant.inventoryItem?.tracked ?? "",
+        requiresShipping: variant.inventoryItem?.requiresShipping ?? "",
+        countryCodeOfOrigin: variant.inventoryItem?.countryCodeOfOrigin ?? "",
+        provinceCodeOfOrigin: variant.inventoryItem?.provinceCodeOfOrigin ?? "",
+        harmonizedSystemCode: variant.inventoryItem?.harmonizedSystemCode ?? "",
+        unitCost: variant.inventoryItem?.unitCost
+          ? `${variant.inventoryItem.unitCost.amount} ${variant.inventoryItem.unitCost.currencyCode}`
+          : "",
+      },
+    ],
+    [
+      "id",
+      "productId",
+      "productHandle",
+      "productTitle",
+      "title",
+      "sku",
+      "barcode",
+      "price",
+      "compareAtPrice",
+      "taxable",
+      "taxCode",
+      "inventoryPolicy",
+      "showUnitPrice",
+      "inventoryQuantity",
+      "inventoryItemId",
+      "inventoryItemNumericId",
+      "tracked",
+      "requiresShipping",
+      "countryCodeOfOrigin",
+      "provinceCodeOfOrigin",
+      "harmonizedSystemCode",
+      "unitCost",
+    ],
+  );
 }
 
 export function extractProductImages(product: ProductDetails): ProductImageItem[] {
@@ -681,6 +955,24 @@ async function resolveProductReference(
   }
 
   return product.id;
+}
+
+async function getProductVariant(
+  client: ShopifyClient,
+  id: string,
+): Promise<ProductVariantDetails> {
+  const variant = (
+    await client.query<ProductVariantGetResponse>({
+      query: PRODUCT_VARIANT_GET_QUERY,
+      variables: { id },
+    })
+  ).productVariant;
+
+  if (!variant) {
+    throw new Error(`Product variant not found: ${id}`);
+  }
+
+  return variant;
 }
 
 function assertNoUserErrors(userErrors: GraphQlUserError[]): void {
@@ -761,6 +1053,18 @@ export function normalizeProductId(input: string): string {
   );
 }
 
+export function normalizeProductVariantId(input: string): string {
+  if (input.startsWith("gid://shopify/ProductVariant/")) {
+    return input;
+  }
+
+  if (/^\d+$/.test(input)) {
+    return `gid://shopify/ProductVariant/${input}`;
+  }
+
+  throw new Error("Expected a product variant GID or numeric variant ID.");
+}
+
 export function buildProductSearchQuery(
   options: ProductSearchQueryOptions,
 ): string | null {
@@ -829,6 +1133,119 @@ export function parseTags(tags: string): string[] {
     .filter(Boolean);
 }
 
+export function buildProductVariantUpdateInput(
+  id: string,
+  options: ProductVariantUpdateOptions,
+): Record<string, unknown> {
+  const metafields = options.metafield?.map((entry) => parseVariantMetafield(entry));
+  const compareAtPrice = buildNullableValue(
+    options.compareAtPrice,
+    options.clearCompareAtPrice,
+    "--compare-at-price",
+  );
+  const barcode = buildNullableValue(
+    options.barcode,
+    options.clearBarcode,
+    "--barcode",
+  );
+  const taxCode = buildNullableValue(
+    options.taxCode,
+    options.clearTaxCode,
+    "--tax-code",
+  );
+
+  const payload = omitUndefined({
+    barcode,
+    compareAtPrice:
+      compareAtPrice === null
+        ? null
+        : compareAtPrice === undefined
+          ? undefined
+          : normalizeNonNegativeDecimal(compareAtPrice, "--compare-at-price"),
+    id,
+    inventoryPolicy: parseInventoryPolicy(options.inventoryPolicy),
+    metafields: metafields?.length ? metafields : undefined,
+    price:
+      options.price !== undefined
+        ? normalizeNonNegativeDecimal(options.price, "--price")
+        : undefined,
+    showUnitPrice:
+      options.showUnitPrice !== undefined
+        ? parseBooleanFlag(options.showUnitPrice, "--show-unit-price")
+        : undefined,
+    taxCode,
+    taxable:
+      options.taxable !== undefined
+        ? parseBooleanFlag(options.taxable, "--taxable")
+        : undefined,
+  });
+
+  if (Object.keys(payload).length === 1) {
+    throw new Error(
+      "Nothing to update. Pass at least one variant or inventory item field to modify.",
+    );
+  }
+
+  return payload;
+}
+
+export function buildInventoryItemUpdateInput(
+  options: ProductVariantUpdateOptions,
+): Record<string, unknown> {
+  const payload = omitUndefined({
+    countryCodeOfOrigin: options.countryCodeOfOrigin?.trim() || undefined,
+    cost:
+      options.cost !== undefined ? normalizeNonNegativeDecimal(options.cost, "--cost") : undefined,
+    harmonizedSystemCode: options.harmonizedSystemCode?.trim() || undefined,
+    provinceCodeOfOrigin: options.provinceCodeOfOrigin?.trim() || undefined,
+    requiresShipping:
+      options.requiresShipping !== undefined
+        ? parseBooleanFlag(options.requiresShipping, "--requires-shipping")
+        : undefined,
+    sku: options.sku?.trim() || undefined,
+    tracked:
+      options.tracked !== undefined
+        ? parseBooleanFlag(options.tracked, "--tracked")
+        : undefined,
+  });
+
+  if (Object.keys(payload).length === 0) {
+    throw new Error(
+      "Nothing to update. Pass at least one variant or inventory item field to modify.",
+    );
+  }
+
+  return payload;
+}
+
+export function hasVariantFieldUpdates(options: ProductVariantUpdateOptions): boolean {
+  return (
+    options.price !== undefined ||
+    options.compareAtPrice !== undefined ||
+    Boolean(options.clearCompareAtPrice) ||
+    options.barcode !== undefined ||
+    Boolean(options.clearBarcode) ||
+    options.taxable !== undefined ||
+    options.taxCode !== undefined ||
+    Boolean(options.clearTaxCode) ||
+    options.inventoryPolicy !== undefined ||
+    options.showUnitPrice !== undefined ||
+    (options.metafield?.length ?? 0) > 0
+  );
+}
+
+export function hasInventoryItemFieldUpdates(options: ProductVariantUpdateOptions): boolean {
+  return (
+    options.sku !== undefined ||
+    options.cost !== undefined ||
+    options.tracked !== undefined ||
+    options.requiresShipping !== undefined ||
+    options.countryCodeOfOrigin !== undefined ||
+    options.provinceCodeOfOrigin !== undefined ||
+    options.harmonizedSystemCode !== undefined
+  );
+}
+
 export function normalizeProductCategoryId(input: string): string {
   const trimmed = input.trim();
 
@@ -860,6 +1277,120 @@ function sanitizeRawQuery(value?: string): string | null {
   const trimmed = value?.trim();
 
   return trimmed ? trimmed : null;
+}
+
+function parseBooleanFlag(value: string, flagName: string): boolean {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "true") {
+    return true;
+  }
+
+  if (normalized === "false") {
+    return false;
+  }
+
+  throw new Error(`${flagName} must be either true or false.`);
+}
+
+function parseInventoryPolicy(input?: string): string | undefined {
+  if (!input) {
+    return undefined;
+  }
+
+  const normalized = input.trim().toUpperCase();
+
+  if (!["CONTINUE", "DENY"].includes(normalized)) {
+    throw new Error(
+      `Invalid --inventory-policy value "${input}". Valid values: continue, deny.`,
+    );
+  }
+
+  return normalized;
+}
+
+function normalizeNonNegativeDecimal(input: string, flagName: string): string {
+  const trimmed = input.trim();
+
+  if (!/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    throw new Error(
+      `Invalid ${flagName} value "${input}". Expected a non-negative decimal.`,
+    );
+  }
+
+  if (Number(trimmed) < 0) {
+    throw new Error(`${flagName} must be zero or greater.`);
+  }
+
+  return trimmed;
+}
+
+function buildNullableValue(
+  value: string | undefined,
+  clear: boolean | undefined,
+  flagName: string,
+): string | null | undefined {
+  if (value !== undefined && clear) {
+    const clearFlag =
+      flagName === "--compare-at-price"
+        ? "--clear-compare-at-price"
+        : flagName === "--tax-code"
+          ? "--clear-tax-code"
+          : "--clear-barcode";
+    throw new Error(`Use either ${flagName} or ${clearFlag}, but not both.`);
+  }
+
+  if (clear) {
+    return null;
+  }
+
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function parseVariantMetafield(input: string): Record<string, string> {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    throw new Error("--metafield entries must be non-empty.");
+  }
+
+  const firstColon = trimmed.indexOf(":");
+  const secondColon = trimmed.indexOf(":", firstColon + 1);
+
+  if (firstColon <= 0 || secondColon <= firstColon + 1) {
+    throw new Error(
+      `Invalid --metafield value "${input}". Expected namespace.key:type:value.`,
+    );
+  }
+
+  const namespaceAndKey = trimmed.slice(0, firstColon);
+  const type = trimmed.slice(firstColon + 1, secondColon).trim();
+  const value = trimmed.slice(secondColon + 1).trim();
+  const dotIndex = namespaceAndKey.indexOf(".");
+
+  if (dotIndex <= 0 || dotIndex === namespaceAndKey.length - 1) {
+    throw new Error(
+      `Invalid --metafield value "${input}". Expected namespace.key:type:value.`,
+    );
+  }
+
+  if (!type || !value) {
+    throw new Error(
+      `Invalid --metafield value "${input}". Expected namespace.key:type:value.`,
+    );
+  }
+
+  return {
+    key: namespaceAndKey.slice(dotIndex + 1),
+    namespace: namespaceAndKey.slice(0, dotIndex),
+    type,
+    value,
+  };
+}
+
+function collectRepeatedOption(value: string, previous?: string[]): string[] {
+  return [...(previous ?? []), value];
 }
 
 function buildFilterTerm(field: string, value?: string): string | null {

@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildInventoryItemUpdateInput,
   buildProductCreateInput,
   buildProductUpdateInput,
+  buildProductVariantUpdateInput,
   buildProductSearchQuery,
   extractProductImages,
   normalizeProductCategoryId,
   normalizeProductCategorySearchId,
   normalizeProductId,
+  normalizeProductVariantId,
   parseProductStatus,
   parseProductSortKey,
   parseTags,
@@ -27,6 +30,26 @@ describe("normalizeProductId", () => {
   it("rejects non ids without --handle", () => {
     expect(() => normalizeProductId("my-handle")).toThrow(
       "Expected a product GID or numeric product ID. Use --handle to fetch by handle.",
+    );
+  });
+});
+
+describe("normalizeProductVariantId", () => {
+  it("accepts a GraphQL gid as-is", () => {
+    expect(normalizeProductVariantId("gid://shopify/ProductVariant/123")).toBe(
+      "gid://shopify/ProductVariant/123",
+    );
+  });
+
+  it("converts numeric ids into GraphQL gids", () => {
+    expect(normalizeProductVariantId("123")).toBe(
+      "gid://shopify/ProductVariant/123",
+    );
+  });
+
+  it("rejects unsupported values", () => {
+    expect(() => normalizeProductVariantId("mini-001")).toThrow(
+      "Expected a product variant GID or numeric variant ID.",
     );
   });
 });
@@ -211,6 +234,127 @@ describe("buildProductUpdateInput", () => {
     ).toThrow(
       "--delete-conflicting-metafields can only be used when changing or clearing the product category.",
     );
+  });
+});
+
+describe("buildProductVariantUpdateInput", () => {
+  it("maps CLI options into Shopify product variant input", () => {
+    expect(
+      buildProductVariantUpdateInput("gid://shopify/ProductVariant/1", {
+        barcode: "8437000000012",
+        compareAtPrice: "49.95",
+        format: "json",
+        inventoryPolicy: "continue",
+        metafield: ["custom.material:single_line_text_field:resin"],
+        price: "39.95",
+        showUnitPrice: "true",
+        taxCode: "P0000000",
+        taxable: "false",
+      }),
+    ).toEqual({
+      barcode: "8437000000012",
+      compareAtPrice: "49.95",
+      id: "gid://shopify/ProductVariant/1",
+      inventoryPolicy: "CONTINUE",
+      metafields: [
+        {
+          key: "material",
+          namespace: "custom",
+          type: "single_line_text_field",
+          value: "resin",
+        },
+      ],
+      price: "39.95",
+      showUnitPrice: true,
+      taxCode: "P0000000",
+      taxable: false,
+    });
+  });
+
+  it("supports clearing nullable fields", () => {
+    expect(
+      buildProductVariantUpdateInput("gid://shopify/ProductVariant/1", {
+        clearBarcode: true,
+        clearCompareAtPrice: true,
+        clearTaxCode: true,
+        format: "json",
+      }),
+    ).toEqual({
+      barcode: null,
+      compareAtPrice: null,
+      id: "gid://shopify/ProductVariant/1",
+      taxCode: null,
+    });
+  });
+
+  it("rejects conflicting clear flags", () => {
+    expect(() =>
+      buildProductVariantUpdateInput("gid://shopify/ProductVariant/1", {
+        compareAtPrice: "49.95",
+        clearCompareAtPrice: true,
+        format: "json",
+      }),
+    ).toThrow(
+      "Use either --compare-at-price or --clear-compare-at-price, but not both.",
+    );
+  });
+
+  it("accepts zero for price-like decimal fields", () => {
+    expect(
+      buildProductVariantUpdateInput("gid://shopify/ProductVariant/1", {
+        format: "json",
+        price: "0",
+      }),
+    ).toEqual({
+      id: "gid://shopify/ProductVariant/1",
+      price: "0",
+    });
+  });
+});
+
+describe("buildInventoryItemUpdateInput", () => {
+  it("maps CLI options into Shopify inventory item input", () => {
+    expect(
+      buildInventoryItemUpdateInput({
+        cost: "12.50",
+        countryCodeOfOrigin: " es ",
+        format: "json",
+        harmonizedSystemCode: "950300",
+        provinceCodeOfOrigin: " se ",
+        requiresShipping: "false",
+        sku: " MINI-001 ",
+        tracked: "true",
+      }),
+    ).toEqual({
+      cost: "12.50",
+      countryCodeOfOrigin: "es",
+      harmonizedSystemCode: "950300",
+      provinceCodeOfOrigin: "se",
+      requiresShipping: false,
+      sku: "MINI-001",
+      tracked: true,
+    });
+  });
+
+  it("requires at least one field", () => {
+    expect(() =>
+      buildInventoryItemUpdateInput({
+        format: "json",
+      }),
+    ).toThrow(
+      "Nothing to update. Pass at least one variant or inventory item field to modify.",
+    );
+  });
+
+  it("accepts zero cost", () => {
+    expect(
+      buildInventoryItemUpdateInput({
+        cost: "0",
+        format: "json",
+      }),
+    ).toEqual({
+      cost: "0",
+    });
   });
 });
 

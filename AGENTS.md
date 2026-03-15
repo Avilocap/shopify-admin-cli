@@ -27,6 +27,7 @@ Supported commands and capabilities:
 - `products search`
 - `products create`
 - `products update`
+- `products variants update`
 - `products delete`
 - `orders list`
 - `orders get`
@@ -46,9 +47,14 @@ Supported commands and capabilities:
 - `financial transactions`
 - `financial refund`
 - `financial summary`
+- `inventory levels`
+- `inventory adjust`
+- `inventory set`
+- `inventory locations`
 - `collections list`
 - `collections get`
 - `collections products`
+- `collections update`
 - `discounts list`
 - `discounts get`
 - `discounts create`
@@ -106,6 +112,7 @@ Correct clarity examples:
 
 - `products get` must make it clear whether it accepts a GID, a numeric ID, or `--handle`
 - `products create` and `products update` must make it clear that `--category` expects a taxonomy category GID or raw taxonomy category ID
+- `collections update` must make it clear that it accepts a collection GID or numeric ID and that changing the title does not change the handle automatically
 - `config add` must make it clear that `--domain` has to be `*.myshopify.com`
 
 ## Workflow

@@ -1,3 +1,30 @@
+const PRODUCT_VARIANT_FIELDS = `
+  id
+  title
+  sku
+  barcode
+  price
+  compareAtPrice
+  taxable
+  taxCode
+  inventoryPolicy
+  showUnitPrice
+  inventoryQuantity
+  inventoryItem {
+    id
+    legacyResourceId
+    tracked
+    requiresShipping
+    countryCodeOfOrigin
+    provinceCodeOfOrigin
+    harmonizedSystemCode
+    unitCost {
+      amount
+      currencyCode
+    }
+  }
+`;
+
 export const PRODUCTS_LIST_QUERY = `
   query ProductsList(
     $first: Int!,
@@ -54,11 +81,7 @@ export const PRODUCT_GET_QUERY = `
       totalInventory
       variants(first: 10) {
         nodes {
-          id
-          title
-          sku
-          price
-          inventoryQuantity
+          ${PRODUCT_VARIANT_FIELDS}
         }
       }
     }
@@ -102,11 +125,7 @@ export const PRODUCT_GET_WITH_MEDIA_QUERY = `
       }
       variants(first: 10) {
         nodes {
-          id
-          title
-          sku
-          price
-          inventoryQuantity
+          ${PRODUCT_VARIANT_FIELDS}
         }
       }
     }
@@ -134,11 +153,7 @@ export const PRODUCT_BY_HANDLE_QUERY = `
       totalInventory
       variants(first: 10) {
         nodes {
-          id
-          title
-          sku
-          price
-          inventoryQuantity
+          ${PRODUCT_VARIANT_FIELDS}
         }
       }
     }
@@ -182,12 +197,21 @@ export const PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY = `
       }
       variants(first: 10) {
         nodes {
-          id
-          title
-          sku
-          price
-          inventoryQuantity
+          ${PRODUCT_VARIANT_FIELDS}
         }
+      }
+    }
+  }
+`;
+
+export const PRODUCT_VARIANT_GET_QUERY = `
+  query ProductVariantGet($id: ID!) {
+    productVariant(id: $id) {
+      ${PRODUCT_VARIANT_FIELDS}
+      product {
+        id
+        handle
+        title
       }
     }
   }
@@ -259,6 +283,53 @@ export const PRODUCT_DELETE_MUTATION = `
         id
         status
         deletedProductId
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export const PRODUCT_VARIANTS_BULK_UPDATE_MUTATION = `
+  mutation ProductVariantsBulkUpdate(
+    $productId: ID!,
+    $variants: [ProductVariantsBulkInput!]!
+  ) {
+    productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+      product {
+        id
+        handle
+        title
+      }
+      productVariants {
+        ${PRODUCT_VARIANT_FIELDS}
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export const INVENTORY_ITEM_UPDATE_MUTATION = `
+  mutation InventoryItemUpdate($id: ID!, $input: InventoryItemInput!) {
+    inventoryItemUpdate(id: $id, input: $input) {
+      inventoryItem {
+        id
+        legacyResourceId
+        sku
+        tracked
+        requiresShipping
+        countryCodeOfOrigin
+        provinceCodeOfOrigin
+        harmonizedSystemCode
+        unitCost {
+          amount
+          currencyCode
+        }
       }
       userErrors {
         field

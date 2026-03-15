@@ -6,9 +6,15 @@ import { resolveStore } from "../config.js";
 import {
   COLLECTION_GET_QUERY,
   COLLECTION_PRODUCTS_QUERY,
+  COLLECTION_UPDATE_MUTATION,
   COLLECTIONS_LIST_QUERY,
 } from "../graphql/collections.js";
-import type { OutputFormat, PageInfo, ProductListItem } from "../types.js";
+import type {
+  GraphQlUserError,
+  OutputFormat,
+  PageInfo,
+  ProductListItem,
+} from "../types.js";
 import { printJson, printOutput, printTable } from "../utils/output.js";
 
 const COLLECTION_SORT_KEYS = ["ID", "RELEVANCE", "TITLE", "UPDATED_AT"] as const;
@@ -22,9 +28,25 @@ const COLLECTION_PRODUCT_SORT_KEYS = [
   "RELEVANCE",
   "TITLE",
 ] as const;
+const COLLECTION_UPDATE_SORT_ORDERS = [
+  "ALPHA_ASC",
+  "ALPHA_DESC",
+  "BEST_SELLING",
+  "CREATED",
+  "CREATED_DESC",
+  "MANUAL",
+  "PRICE_ASC",
+  "PRICE_DESC",
+] as const;
 
 type CollectionSortKey = (typeof COLLECTION_SORT_KEYS)[number];
 type CollectionProductSortKey = (typeof COLLECTION_PRODUCT_SORT_KEYS)[number];
+type CollectionUpdateSortOrder = (typeof COLLECTION_UPDATE_SORT_ORDERS)[number];
+
+interface CollectionSeo {
+  description: string | null;
+  title: string | null;
+}
 
 interface CollectionCount {
   count: number;
@@ -45,6 +67,9 @@ interface CollectionListItem {
 
 interface CollectionDetails extends CollectionListItem {
   description: string;
+  descriptionHtml: string;
+  seo: CollectionSeo;
+  templateSuffix: string | null;
 }
 
 interface CollectionsListResponse {
@@ -59,6 +84,15 @@ interface CollectionsListResponse {
 
 interface CollectionGetResponse {
   collection: CollectionDetails | null;
+}
+
+interface CollectionMutationResponse {
+  collection: CollectionDetails | null;
+  userErrors: GraphQlUserError[];
+}
+
+interface CollectionUpdateResponse {
+  collectionUpdate: CollectionMutationResponse;
 }
 
 interface CollectionProductsResponse {
@@ -89,6 +123,18 @@ interface CollectionGetOptions {
   format: OutputFormat;
 }
 
+interface CollectionUpdateOptions {
+  description?: string;
+  format: OutputFormat;
+  handle?: string;
+  redirectNewHandle?: boolean;
+  seoDescription?: string;
+  seoTitle?: string;
+  sortOrder?: string;
+  templateSuffix?: string;
+  title?: string;
+}
+
 interface CollectionProductsOptions {
   after?: string;
   format: OutputFormat;
@@ -100,7 +146,7 @@ interface CollectionProductsOptions {
 export function registerCollectionCommands(program: Command): void {
   const collections = program
     .command("collections")
-    .description("Read collection data");
+    .description("Read and modify collection data");
 
   collections
     .command("list")
@@ -146,6 +192,7 @@ Examples:
 
 Notes:
   The argument must be a Shopify collection GID or numeric collection ID.
+  The response includes description, HTML description, SEO fields, and template suffix.
       `,
     )
     .action(async (id: string, options: CollectionGetOptions, command: Command) => {
@@ -167,6 +214,58 @@ Notes:
       }
 
       printCollectionDetails(data.collection);
+    });
+
+  collections
+    .command("update")
+    .description("Update top-level fields for an existing collection")
+    .argument("<id>", "Collection GID or numeric ID")
+    .option("--title <title>", "Collection title")
+    .option("--description <html>", "HTML description")
+    .option("--handle <handle>", "Collection handle")
+    .option("--redirect-new-handle", "Create a redirect when the handle changes")
+    .option("--seo-title <title>", "SEO title override")
+    .option("--seo-description <text>", "SEO description override")
+    .option(
+      "--sort-order <sortOrder>",
+      `Collection sort order: ${COLLECTION_UPDATE_SORT_ORDERS.join(", ").toLowerCase().replaceAll("_", "-")}`,
+    )
+    .option("--template-suffix <suffix>", "Theme template suffix")
+    .option("--format <format>", "table or json", "json")
+    .addHelpText(
+      "after",
+      `
+Examples:
+  shopfleet collections update 1234567890 --title "Holy Week 2026"
+  shopfleet collections update 1234567890 --description "<p>Featured collection</p>"
+  shopfleet collections update 1234567890 --handle holy-week-2026 --redirect-new-handle
+  shopfleet collections update 1234567890 --seo-title "Holy Week" --seo-description "Featured collection" --template-suffix seasonal
+
+Notes:
+  The argument must be a Shopify collection GID or numeric collection ID.
+  Changing the title does not change the handle automatically.
+  Use --redirect-new-handle only together with --handle.
+  This command updates top-level collection fields only. It does not edit rules, images, or metafields.
+      `,
+    )
+    .action(async (id: string, options: CollectionUpdateOptions, command: Command) => {
+      const storeAlias = command.optsWithGlobals().store as string | undefined;
+      const store = await resolveStore(storeAlias);
+      const client = new ShopifyClient({ store });
+      const data = await client.query<CollectionUpdateResponse>({
+        query: COLLECTION_UPDATE_MUTATION,
+        variables: {
+          input: buildCollectionUpdateInput(normalizeCollectionId(id), options),
+        },
+      });
+
+      assertNoCollectionUserErrors(data.collectionUpdate.userErrors);
+
+      if (!data.collectionUpdate.collection) {
+        throw new Error("Shopify did not return the updated collection.");
+      }
+
+      printCollectionMutationResult(data.collectionUpdate.collection, options.format);
     });
 
   collections
@@ -326,10 +425,14 @@ function printCollectionDetails(collection: CollectionDetails): void {
     [
       {
         description: collection.description,
+        descriptionHtml: collection.descriptionHtml,
         handle: collection.handle,
         id: collection.id,
         productsCount: formatCollectionCount(collection.productsCount),
+        seoDescription: collection.seo.description ?? "",
+        seoTitle: collection.seo.title ?? "",
         sortOrder: collection.sortOrder,
+        templateSuffix: collection.templateSuffix ?? "",
         title: collection.title,
         type: collection.ruleSet ? "smart" : "custom",
         updatedAt: collection.updatedAt,
@@ -344,8 +447,24 @@ function printCollectionDetails(collection: CollectionDetails): void {
       "sortOrder",
       "updatedAt",
       "description",
+      "descriptionHtml",
+      "seoTitle",
+      "seoDescription",
+      "templateSuffix",
     ],
   );
+}
+
+function printCollectionMutationResult(
+  collection: CollectionDetails,
+  format: OutputFormat,
+): void {
+  if (format === "json") {
+    printJson(collection);
+    return;
+  }
+
+  printCollectionDetails(collection);
 }
 
 function formatCollectionCount(count: CollectionCount): string {
@@ -362,6 +481,32 @@ export function normalizeCollectionId(input: string): string {
   }
 
   throw new Error("Expected a collection GID or numeric collection ID.");
+}
+
+export function buildCollectionUpdateInput(
+  id: string,
+  options: CollectionUpdateOptions,
+): Record<string, unknown> {
+  if (options.redirectNewHandle && !options.handle?.trim()) {
+    throw new Error("--redirect-new-handle requires --handle.");
+  }
+
+  const payload = omitUndefined({
+    descriptionHtml: options.description,
+    handle: sanitizeOptionalString(options.handle),
+    id,
+    redirectNewHandle: options.redirectNewHandle || undefined,
+    seo: buildCollectionSeoInput(options),
+    sortOrder: parseCollectionUpdateSortOrder(options.sortOrder),
+    templateSuffix: sanitizeOptionalString(options.templateSuffix),
+    title: sanitizeOptionalString(options.title),
+  });
+
+  if (Object.keys(payload).length === 1) {
+    throw new Error("Nothing to update. Pass at least one field to modify.");
+  }
+
+  return payload;
 }
 
 export function buildCollectionSearchQuery(options: {
@@ -421,6 +566,24 @@ export function parseCollectionProductSortKey(
   return normalized as CollectionProductSortKey;
 }
 
+export function parseCollectionUpdateSortOrder(
+  input: string | undefined,
+): CollectionUpdateSortOrder | undefined {
+  if (!input) {
+    return undefined;
+  }
+
+  const normalized = input.trim().toUpperCase().replaceAll("-", "_");
+
+  if (!COLLECTION_UPDATE_SORT_ORDERS.includes(normalized as CollectionUpdateSortOrder)) {
+    throw new Error(
+      `Invalid --sort-order value "${input}". Valid values: ${COLLECTION_UPDATE_SORT_ORDERS.join(", ").toLowerCase().replaceAll("_", "-")}.`,
+    );
+  }
+
+  return normalized as CollectionUpdateSortOrder;
+}
+
 function sanitizeRawQuery(value?: string): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -438,4 +601,41 @@ function buildTypeFilter(input?: string): string | null {
   }
 
   return `collection_type:${normalized}`;
+}
+
+function sanitizeOptionalString(value?: string): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function buildCollectionSeoInput(
+  options: Pick<CollectionUpdateOptions, "seoDescription" | "seoTitle">,
+): Record<string, unknown> | undefined {
+  const seo = omitUndefined({
+    description: sanitizeOptionalString(options.seoDescription),
+    title: sanitizeOptionalString(options.seoTitle),
+  });
+
+  return Object.keys(seo).length > 0 ? seo : undefined;
+}
+
+function assertNoCollectionUserErrors(userErrors: GraphQlUserError[]): void {
+  if (userErrors.length === 0) {
+    return;
+  }
+
+  const message = userErrors
+    .map((error) => {
+      const field = error.field?.join(".") ?? "";
+      return field ? `${field}: ${error.message}` : error.message;
+    })
+    .join("\n");
+
+  throw new Error(message);
+}
+
+function omitUndefined(input: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined),
+  );
 }
