@@ -36,9 +36,9 @@ Store config lives at `~/.shopfleet/stores.json` and the CLI migrates from `~/.s
 
 ### 2. Classify the task
 
-- Read-only task: `shop info`, list/get/search commands, analytics, and other non-mutating reads are generally safe on an existing configured alias.
+- Read-only task: `shop info`, list/get/search commands, metafield reads, analytics, and other non-mutating reads are generally safe on an existing configured alias.
 - Local config task: `config add`, `config remove`, `config set-default`, and config migration work can be tested locally without touching Shopify if you use fake credentials.
-- Write task: product create/update/delete, product variant updates, collection updates, order cancel, gift card create, page create, blog article create, refund, inventory adjust/set, fulfillment create/tracking, and discount create all mutate store data. Production use is valid, but these commands should be executed deliberately against the intended alias.
+- Write task: product create/update/delete, product variant updates, collection updates, order cancel, gift card create, page create, blog article create, refund, inventory adjust/set, metafield set/delete, fulfillment create/tracking, and discount create all mutate store data. Production use is valid, but these commands should be executed deliberately against the intended alias.
 
 ### 3. Choose the safest validation path
 

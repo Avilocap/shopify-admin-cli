@@ -51,6 +51,10 @@ Supported commands and capabilities:
 - `inventory adjust`
 - `inventory set`
 - `inventory locations`
+- `metafields list`
+- `metafields get`
+- `metafields set`
+- `metafields delete`
 - `collections list`
 - `collections get`
 - `collections products`
@@ -113,6 +117,9 @@ Correct clarity examples:
 - `products get` must make it clear whether it accepts a GID, a numeric ID, or `--handle`
 - `products create` and `products update` must make it clear that `--category` expects a taxonomy category GID or raw taxonomy category ID
 - `collections update` must make it clear that it accepts a collection GID or numeric ID and that changing the title does not change the handle automatically
+- `metafields get` and `metafields delete` must make it clear that they expect an owner GID plus a `namespace.key` identifier
+- `metafields set` must make it clear that `--entry` expects `namespace.key:type:value`
+- `metafields` commands must mention `--current-app-installation` when app-data metafields are relevant
 - `config add` must make it clear that `--domain` has to be `*.myshopify.com`
 
 ## Workflow

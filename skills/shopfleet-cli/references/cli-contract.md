@@ -26,6 +26,7 @@ The current top-level groups are:
 - `pages`
 - `blogs`
 - `inventory`
+- `metafields`
 - `collections`
 - `fulfillment`
 - `discounts`
@@ -61,6 +62,9 @@ Use command help to confirm exact input, but these rules are important:
 - `inventory adjust --location-id` expects a location GID or numeric ID.
 - `inventory set --item-id` expects an inventory item GID or numeric ID.
 - `inventory set --location-id` expects a location GID or numeric ID.
+- `metafields list` expects an owner GID with `--owner-id`, unless `--current-app-installation` is used instead.
+- `metafields get|delete` expect an owner GID plus a `namespace.key` identifier.
+- `metafields set` expects an owner GID plus one or more `--entry namespace.key:type:value` values.
 - `fulfillment create --fulfillment-order-id` expects a fulfillment order GID or numeric ID.
 - `fulfillment create --line-items` expects fulfillment order line item IDs, not order line item IDs.
 
@@ -80,6 +84,8 @@ These commands mutate Shopify data and should be treated as real store operation
 - `financial refund`
 - `inventory adjust`
 - `inventory set`
+- `metafields set`
+- `metafields delete`
 - `fulfillment create`
 - `fulfillment tracking`
 - `discounts create`
@@ -94,6 +100,8 @@ Notes:
 - `discounts create` requires exactly one of `--percentage` or `--amount`.
 - `inventory adjust --quantity` is a signed delta, not an absolute quantity.
 - `inventory set --quantity` is an absolute quantity, not a delta.
+- `metafields delete` is destructive and requires `--force`.
+- `metafields` access follows the owner resource scopes. There is no standalone Admin API metafield scope.
 - Analytics commands are read-only and implemented on ShopifyQL.
 
 ## Safe Validation Recipes

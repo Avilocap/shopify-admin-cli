@@ -38,6 +38,10 @@ Available commands and capabilities:
 - `inventory adjust`
 - `inventory set`
 - `inventory locations`
+- `metafields list`
+- `metafields get`
+- `metafields set`
+- `metafields delete`
 - `collections list`
 - `collections get`
 - `collections products`
@@ -166,6 +170,16 @@ Recommended Admin API scopes:
 write_products, write_orders, read_all_orders, write_customers, write_inventory, write_discounts, read_assigned_fulfillment_orders, write_assigned_fulfillment_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders, read_third_party_fulfillment_orders, write_third_party_fulfillment_orders, write_gift_cards, write_content, write_draft_orders, write_metaobject_definitions, write_metaobjects, write_online_store_navigation, read_price_rules, read_reports, read_locations, read_markets, read_themes
 ```
 
+Metafields do not use separate `read_metafields` or `write_metafields` Admin API scopes.
+Access follows the owner resource:
+
+- reading metafields requires read access to the owner resource
+- writing metafields requires the same write access used to mutate the owner resource
+- app-data metafields on `AppInstallation` do not require an extra OAuth scope
+
+The recommended scope set above is already enough for the owner resources that Shopfleet currently supports.
+If you want to manage metafields on another Shopify resource type, add the corresponding owner resource scope for that type.
+
 Then register the store in the CLI:
 
 ```bash
@@ -215,6 +229,10 @@ shopfleet inventory levels --sku ABC-123
 shopfleet inventory adjust --item-id 30322695 --location-id 124656943 --quantity -4
 shopfleet inventory set --item-id 30322695 --location-id 124656943 --quantity 12
 shopfleet inventory locations --limit 10
+shopfleet metafields list --owner-id gid://shopify/Product/1234567890
+shopfleet metafields get custom.material --owner-id gid://shopify/Product/1234567890
+shopfleet metafields set --owner-id gid://shopify/Product/1234567890 --entry custom.material:single_line_text_field:resin
+shopfleet metafields delete --owner-id gid://shopify/Product/1234567890 --identifier custom.material --force
 shopfleet collections list --limit 10
 shopfleet collections get 1234567890 --format table
 shopfleet collections products 1234567890 --limit 10
@@ -273,6 +291,28 @@ For category-aware workflows, `--category` accepts either a taxonomy category GI
 Product write commands support top-level product fields, including optional `--seo-title`, `--seo-description`, and taxonomy category assignment.
 Use `products variants update` for variant pricing, barcode, tax fields, metafields, and linked inventory item metadata such as SKU, tracked, shipping, cost, and origin codes.
 Inventory quantity changes live under the dedicated `inventory` command group.
+
+## Metafields
+
+`metafields` provides generic metafield management for any Shopify owner resource GID that your app can access.
+
+Examples:
+
+```bash
+shopfleet metafields list --owner-id gid://shopify/Product/1234567890
+shopfleet metafields get custom.material --owner-id gid://shopify/Product/1234567890
+shopfleet metafields set --owner-id gid://shopify/ProductVariant/1234567890 --entry custom.release_year:number_integer:2026
+shopfleet metafields set --current-app-installation --entry app_config.feature_tier:single_line_text_field:premium
+shopfleet metafields delete --owner-id gid://shopify/Product/1234567890 --identifier custom.material --force
+```
+
+Notes:
+
+- `--owner-id` expects a Shopify owner GID such as `gid://shopify/Product/1234567890`.
+- `--current-app-installation` resolves the current `AppInstallation` owner automatically for app-data metafields.
+- `get` and `delete` use `namespace.key`.
+- `set` uses `namespace.key:type:value`. The value is always sent as a string. For JSON metafields, pass a serialized JSON string.
+- Shopify allows up to 25 metafields per `metafieldsSet` or `metafieldsDelete` request.
 
 ## Orders
 
