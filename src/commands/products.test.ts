@@ -5,6 +5,8 @@ import {
   buildProductUpdateInput,
   buildProductSearchQuery,
   extractProductImages,
+  normalizeProductCategoryId,
+  normalizeProductCategorySearchId,
   normalizeProductId,
   parseProductStatus,
   parseProductSortKey,
@@ -33,16 +35,49 @@ describe("buildProductSearchQuery", () => {
   it("combines free text and structured filters", () => {
     expect(
       buildProductSearchQuery({
+        category: "sg-4-17-2-17",
         rawQuery: "corona",
         status: "active",
         type: "Semana Santa",
         vendor: "Pichardo",
       }),
-    ).toBe('corona vendor:Pichardo product_type:"Semana Santa" status:active');
+    ).toBe(
+      'corona category_id:sg-4-17-2-17 vendor:Pichardo product_type:"Semana Santa" status:active',
+    );
   });
 
   it("returns null when no filters are set", () => {
     expect(buildProductSearchQuery({})).toBeNull();
+  });
+});
+
+describe("normalizeProductCategoryId", () => {
+  it("accepts a taxonomy category gid as-is", () => {
+    expect(normalizeProductCategoryId("gid://shopify/TaxonomyCategory/sg-4-17-2-17")).toBe(
+      "gid://shopify/TaxonomyCategory/sg-4-17-2-17",
+    );
+  });
+
+  it("converts a raw taxonomy category id into a gid", () => {
+    expect(normalizeProductCategoryId("sg-4-17-2-17")).toBe(
+      "gid://shopify/TaxonomyCategory/sg-4-17-2-17",
+    );
+  });
+
+  it("rejects other shopify gids", () => {
+    expect(() =>
+      normalizeProductCategoryId("gid://shopify/ProductTaxonomyNode/123"),
+    ).toThrow(
+      "Expected a taxonomy category GID in the gid://shopify/TaxonomyCategory/<id> format.",
+    );
+  });
+});
+
+describe("normalizeProductCategorySearchId", () => {
+  it("returns the raw category id for search filters", () => {
+    expect(
+      normalizeProductCategorySearchId("gid://shopify/TaxonomyCategory/sg-4-17-2-17"),
+    ).toBe("sg-4-17-2-17");
   });
 });
 
@@ -84,6 +119,7 @@ describe("buildProductCreateInput", () => {
   it("maps CLI options into Shopify product input", () => {
     expect(
       buildProductCreateInput({
+        category: "sg-4-17-2-17",
         description: "<p>Hola</p>",
         format: "json",
         handle: "test-product",
@@ -96,6 +132,7 @@ describe("buildProductCreateInput", () => {
         vendor: "Pichardo",
       }),
     ).toEqual({
+      category: "gid://shopify/TaxonomyCategory/sg-4-17-2-17",
       descriptionHtml: "<p>Hola</p>",
       handle: "test-product",
       productType: "Accesorio",
@@ -123,12 +160,16 @@ describe("buildProductUpdateInput", () => {
   it("uses newHandle for handle updates", () => {
     expect(
       buildProductUpdateInput("gid://shopify/Product/1", {
+        category: "sg-4-17-2-17",
+        deleteConflictingMetafields: true,
         format: "json",
         newHandle: "nuevo-handle",
         seoTitle: "Nuevo SEO title",
         title: "Nuevo titulo",
       }),
     ).toEqual({
+      category: "gid://shopify/TaxonomyCategory/sg-4-17-2-17",
+      deleteConflictingConstrainedMetafields: true,
       handle: "nuevo-handle",
       id: "gid://shopify/Product/1",
       seo: {
@@ -137,12 +178,47 @@ describe("buildProductUpdateInput", () => {
       title: "Nuevo titulo",
     });
   });
+
+  it("supports clearing the current category", () => {
+    expect(
+      buildProductUpdateInput("gid://shopify/Product/1", {
+        clearCategory: true,
+        format: "json",
+      }),
+    ).toEqual({
+      category: null,
+      id: "gid://shopify/Product/1",
+    });
+  });
+
+  it("rejects category updates that are internally inconsistent", () => {
+    expect(() =>
+      buildProductUpdateInput("gid://shopify/Product/1", {
+        category: "sg-4-17-2-17",
+        clearCategory: true,
+        format: "json",
+      }),
+    ).toThrow("Use either --category or --clear-category, but not both.");
+  });
+
+  it("rejects deleteConflictingMetafields without a category change", () => {
+    expect(() =>
+      buildProductUpdateInput("gid://shopify/Product/1", {
+        deleteConflictingMetafields: true,
+        format: "json",
+        title: "Nuevo titulo",
+      }),
+    ).toThrow(
+      "--delete-conflicting-metafields can only be used when changing or clearing the product category.",
+    );
+  });
 });
 
 describe("extractProductImages", () => {
   it("keeps only image media and falls back to media alt text", () => {
     expect(
       extractProductImages({
+        category: null,
         handle: "my-product",
         id: "gid://shopify/Product/1",
         media: {

@@ -75,6 +75,7 @@ Supported commands and capabilities:
 - pin a default `SHOPIFY_API_VERSION` and allow override through env
 - support both `clientId/clientSecret` and `accessToken` in config
 - never print secrets in logs or tables
+- treat Shopify taxonomy categories as read-only references; product category edits should only assign, replace, filter, or clear the category on a product
 - keep analytics on `shopifyqlQuery` and read-only
 - do not introduce traffic, conversion, abandonment, marketing analytics, webhooks, or bulk operations unless explicitly requested
 
@@ -104,6 +105,7 @@ Use `addHelpText("after", ...)` in Commander to add:
 Correct clarity examples:
 
 - `products get` must make it clear whether it accepts a GID, a numeric ID, or `--handle`
+- `products create` and `products update` must make it clear that `--category` expects a taxonomy category GID or raw taxonomy category ID
 - `config add` must make it clear that `--domain` has to be `*.myshopify.com`
 
 ## Workflow

@@ -37,6 +37,7 @@ const PRODUCT_SORT_KEYS = [
 type ProductSortKey = (typeof PRODUCT_SORT_KEYS)[number];
 
 interface ProductDetails {
+  category: ProductCategory | null;
   descriptionHtml?: string | null;
   handle: string;
   id: string;
@@ -56,6 +57,11 @@ interface ProductDetails {
     nodes: ProductVariantItem[];
   };
   vendor: string;
+}
+
+interface ProductCategory {
+  fullName: string;
+  id: string;
 }
 
 interface ProductMediaNode {
@@ -98,6 +104,7 @@ interface ProductByHandleResponse {
 
 interface ProductsListOptions {
   after?: string;
+  category?: string;
   format: OutputFormat;
   limit: string;
   query?: string;
@@ -116,6 +123,7 @@ interface ProductGetOptions {
 }
 
 interface ProductSearchQueryOptions {
+  category?: string;
   rawQuery?: string;
   status?: string;
   tag?: string;
@@ -124,6 +132,7 @@ interface ProductSearchQueryOptions {
 }
 
 interface ProductMutationOptions {
+  category?: string;
   description?: string;
   format: OutputFormat;
   handle?: string;
@@ -137,6 +146,8 @@ interface ProductMutationOptions {
 }
 
 interface ProductUpdateOptions extends ProductMutationOptions {
+  clearCategory?: boolean;
+  deleteConflictingMetafields?: boolean;
   matchHandle?: boolean;
   newHandle?: string;
 }
@@ -183,6 +194,10 @@ export function registerProductCommands(program: Command): void {
     .option("--limit <n>", "Number of products to fetch", "20")
     .option("--after <cursor>", "Pagination cursor")
     .option("--query <query>", "Raw Shopify product search query")
+    .option(
+      "--category <categoryId>",
+      "Filter by taxonomy category GID or raw taxonomy category ID",
+    )
     .option("--vendor <vendor>", "Filter by vendor")
     .option("--type <productType>", "Filter by product type")
     .option("--status <status>", "Filter by status: active, draft or archived")
@@ -199,9 +214,11 @@ export function registerProductCommands(program: Command): void {
 Examples:
   shopfleet products list --limit 20
   shopfleet products list --vendor Pichardo --status active
+  shopfleet products list --category sg-4-17-2-17
   shopfleet products list --query 'tag:"miniatura" status:active' --sort updated-at
 
 Notes:
+  --category accepts a taxonomy category GID or a raw taxonomy category ID.
   --query uses Shopify search syntax directly.
   Pagination is manual. Reuse the returned cursor with --after.
       `,
@@ -216,6 +233,10 @@ Notes:
     .argument("<text>", "Search text")
     .option("--limit <n>", "Number of products to fetch", "20")
     .option("--after <cursor>", "Pagination cursor")
+    .option(
+      "--category <categoryId>",
+      "Filter by taxonomy category GID or raw taxonomy category ID",
+    )
     .option("--vendor <vendor>", "Filter by vendor")
     .option("--type <productType>", "Filter by product type")
     .option("--status <status>", "Filter by status: active, draft or archived")
@@ -227,9 +248,11 @@ Notes:
       `
 Examples:
   shopfleet products search corona
+  shopfleet products search sandalia --category sg-4-17-2-17
   shopfleet products search macarena --status active --limit 5
 
 Notes:
+  --category accepts a taxonomy category GID or a raw taxonomy category ID.
   This command builds a Shopify search query and sorts by relevance.
       `,
     )
@@ -239,6 +262,7 @@ Notes:
           ...options,
           query: buildProductSearchQuery({
             rawQuery: text,
+            category: options.category,
             status: options.status,
             tag: options.tag,
             type: options.type,
@@ -271,6 +295,7 @@ Examples:
 
 Notes:
   Without --handle, the argument must be a Shopify product GID or numeric product ID.
+  Product details include the current Shopify taxonomy category when set.
   Use --include-media to include descriptionHtml and up to 10 product images.
       `,
     )
@@ -314,6 +339,10 @@ Notes:
     .requiredOption("--title <title>", "Product title")
     .option("--description <html>", "HTML description")
     .option("--handle <handle>", "Product handle")
+    .option(
+      "--category <categoryId>",
+      "Taxonomy category GID or raw taxonomy category ID",
+    )
     .option("--seo-title <title>", "SEO title override")
     .option("--seo-description <text>", "SEO description override")
     .option("--vendor <vendor>", "Vendor")
@@ -326,10 +355,12 @@ Notes:
       `
 Examples:
   shopfleet products create --title "Test product" --status draft
+  shopfleet products create --title "Test product" --category sg-4-17-2-17
   shopfleet products create --title "Test product" --vendor Pichardo --type Accesorio --tags test,cli
   shopfleet products create --title "Test product" --seo-title "Buy Test product online" --seo-description "Short search snippet"
 
 Notes:
+  --category accepts a taxonomy category GID or a raw taxonomy category ID.
   This command sets top-level product fields, including optional SEO title and SEO description.
   Use the inventory commands for stock changes.
       `,
@@ -362,6 +393,15 @@ Notes:
     .option("--title <title>", "Product title")
     .option("--description <html>", "HTML description")
     .option("--new-handle <handle>", "New product handle")
+    .option(
+      "--category <categoryId>",
+      "Taxonomy category GID or raw taxonomy category ID",
+    )
+    .option("--clear-category", "Remove the current taxonomy category")
+    .option(
+      "--delete-conflicting-metafields",
+      "Delete constrained metafields that conflict with the new category",
+    )
     .option("--seo-title <title>", "SEO title override")
     .option("--seo-description <text>", "SEO description override")
     .option("--vendor <vendor>", "Vendor")
@@ -374,11 +414,15 @@ Notes:
       `
 Examples:
   shopfleet products update 1234567890 --title "Nuevo titulo"
+  shopfleet products update 1234567890 --category sg-4-17-2-17
+  shopfleet products update 1234567890 --clear-category
   shopfleet products update my-handle --handle --status draft --tags test,cli
   shopfleet products update 1234567890 --new-handle nuevo-handle
   shopfleet products update 1234567890 --seo-title "Nuevo SEO title" --seo-description "Nueva SEO description"
 
 Notes:
+  --category accepts a taxonomy category GID or a raw taxonomy category ID.
+  Use --clear-category to remove the current category.
   Use --handle only to resolve the target product by its current handle.
   Use --new-handle if you want to change the product handle.
       `,
@@ -475,6 +519,7 @@ async function runProductsList(
   const limit = Number(options.limit);
   const query = buildProductSearchQuery({
     rawQuery: options.query,
+    category: options.category,
     status: options.status,
     tag: options.tag,
     type: options.type,
@@ -536,6 +581,8 @@ function printProductDetails(product: ProductDetails, includeMedia: boolean): vo
         status: product.status,
         vendor: product.vendor,
         productType: product.productType,
+        category: product.category?.fullName ?? "",
+        categoryId: product.category?.id ?? "",
         tags: product.tags,
         totalInventory: product.totalInventory,
         ...(includeMedia
@@ -553,6 +600,8 @@ function printProductDetails(product: ProductDetails, includeMedia: boolean): vo
       "status",
       "vendor",
       "productType",
+      "category",
+      "categoryId",
       "tags",
       "totalInventory",
       ...(includeMedia ? ["descriptionHtml", "imageCount"] : []),
@@ -653,6 +702,7 @@ export function buildProductCreateInput(
   options: ProductMutationOptions,
 ): Record<string, unknown> {
   return omitUndefined({
+    category: buildProductCategoryCreateInput(options.category),
     descriptionHtml: options.description,
     handle: options.handle,
     productType: options.type,
@@ -668,7 +718,17 @@ export function buildProductUpdateInput(
   id: string,
   options: ProductUpdateOptions,
 ): Record<string, unknown> {
+  const category = buildProductCategoryUpdateInput(options);
+
+  if (options.deleteConflictingMetafields && category === undefined) {
+    throw new Error(
+      "--delete-conflicting-metafields can only be used when changing or clearing the product category.",
+    );
+  }
+
   const payload = omitUndefined({
+    category,
+    deleteConflictingConstrainedMetafields: options.deleteConflictingMetafields || undefined,
     descriptionHtml: options.description,
     handle: options.newHandle,
     id,
@@ -706,6 +766,10 @@ export function buildProductSearchQuery(
 ): string | null {
   const parts = [
     sanitizeRawQuery(options.rawQuery),
+    buildFilterTerm(
+      "category_id",
+      options.category ? normalizeProductCategorySearchId(options.category) : undefined,
+    ),
     buildFilterTerm("vendor", options.vendor),
     buildFilterTerm("product_type", options.type),
     buildFilterTerm("status", options.status?.toLowerCase()),
@@ -765,6 +829,33 @@ export function parseTags(tags: string): string[] {
     .filter(Boolean);
 }
 
+export function normalizeProductCategoryId(input: string): string {
+  const trimmed = input.trim();
+
+  if (!trimmed || /\s/.test(trimmed)) {
+    throw new Error(
+      "Expected a taxonomy category GID or raw taxonomy category ID without spaces.",
+    );
+  }
+
+  if (trimmed.startsWith("gid://shopify/TaxonomyCategory/")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("gid://shopify/")) {
+    throw new Error(
+      "Expected a taxonomy category GID in the gid://shopify/TaxonomyCategory/<id> format.",
+    );
+  }
+
+  return `gid://shopify/TaxonomyCategory/${trimmed}`;
+}
+
+export function normalizeProductCategorySearchId(input: string): string {
+  const categoryId = normalizeProductCategoryId(input);
+  return categoryId.replace("gid://shopify/TaxonomyCategory/", "");
+}
+
 function sanitizeRawQuery(value?: string): string | null {
   const trimmed = value?.trim();
 
@@ -798,6 +889,28 @@ function buildSeoInput(
   });
 
   return Object.keys(seo).length > 0 ? seo : undefined;
+}
+
+function buildProductCategoryCreateInput(category?: string): string | undefined {
+  if (category === undefined) {
+    return undefined;
+  }
+
+  return normalizeProductCategoryId(category);
+}
+
+function buildProductCategoryUpdateInput(
+  options: Pick<ProductUpdateOptions, "category" | "clearCategory">,
+): string | null | undefined {
+  if (options.category !== undefined && options.clearCategory) {
+    throw new Error("Use either --category or --clear-category, but not both.");
+  }
+
+  if (options.clearCategory) {
+    return null;
+  }
+
+  return buildProductCategoryCreateInput(options.category);
 }
 
 function omitUndefined(input: Record<string, unknown>): Record<string, unknown> {

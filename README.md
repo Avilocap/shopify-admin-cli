@@ -187,7 +187,7 @@ shopfleet products get gid://shopify/Product/1234567890
 shopfleet products get 1234567890
 shopfleet products get paso-macarena-miniatura --handle
 shopfleet products create --title "Test product" --status draft
-shopfleet products update 1234567890 --title "Updated title"
+shopfleet products update 1234567890 --category sg-4-17-2-17
 shopfleet products delete 1234567890 --force
 shopfleet orders list --limit 10
 shopfleet orders get 1234567890 --format table
@@ -239,23 +239,29 @@ SHOPIFY_API_VERSION=2026-01 shopfleet shop info
 
 ```bash
 shopfleet products list --vendor Pichardo --type Pasito --status active
+shopfleet products list --category sg-4-17-2-17
 shopfleet products list --query 'tag:"miniatura" status:active' --sort updated-at
 ```
 
 `products search` uses Shopify's default search and sorts by relevance.
-`products get` returns the basic product fields by default. Add `--include-media` to include `descriptionHtml` and up to 10 product images as URLs plus metadata.
+`products get` returns the basic product fields by default, including the current Shopify taxonomy category when one is assigned. Add `--include-media` to include `descriptionHtml` and up to 10 product images as URLs plus metadata.
 
 Write commands are also available:
 
 ```bash
 shopfleet products create --title "Test product" --vendor Pichardo --type Accesorio --tags test,cli
+shopfleet products create --title "Test product" --category sg-4-17-2-17
 shopfleet products create --title "Test product" --seo-title "Buy Test product online" --seo-description "Short search snippet"
+shopfleet products update 1234567890 --category sg-4-17-2-17
+shopfleet products update 1234567890 --clear-category
 shopfleet products update my-product --handle --status draft --new-handle my-updated-product
 shopfleet products update 1234567890 --seo-title "New SEO title" --seo-description "Updated search snippet"
 shopfleet products delete my-updated-product --handle --force
 ```
 
-Product write commands support top-level product fields, including optional `--seo-title` and `--seo-description`.
+For category-aware workflows, `--category` accepts either a taxonomy category GID or a raw taxonomy category ID such as `sg-4-17-2-17`. Use `--clear-category` to remove the current category, and `--delete-conflicting-metafields` when Shopify requires constrained metafields to be cleared during a category change.
+
+Product write commands support top-level product fields, including optional `--seo-title`, `--seo-description`, and taxonomy category assignment.
 Variants, media, and options are not modified by these commands.
 Inventory operations live under the dedicated `inventory` command group.
 

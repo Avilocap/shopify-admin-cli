@@ -39,6 +39,10 @@ export const PRODUCT_GET_QUERY = `
       id
       title
       handle
+      category {
+        id
+        fullName
+      }
       seo {
         title
         description
@@ -67,6 +71,10 @@ export const PRODUCT_GET_WITH_MEDIA_QUERY = `
       id
       title
       handle
+      category {
+        id
+        fullName
+      }
       descriptionHtml
       seo {
         title
@@ -111,6 +119,10 @@ export const PRODUCT_BY_HANDLE_QUERY = `
       id
       title
       handle
+      category {
+        id
+        fullName
+      }
       seo {
         title
         description
@@ -139,6 +151,10 @@ export const PRODUCT_BY_HANDLE_WITH_MEDIA_QUERY = `
       id
       title
       handle
+      category {
+        id
+        fullName
+      }
       descriptionHtml
       seo {
         title
@@ -184,6 +200,10 @@ export const PRODUCT_CREATE_MUTATION = `
         id
         title
         handle
+        category {
+          id
+          fullName
+        }
         seo {
           title
           description
@@ -209,6 +229,10 @@ export const PRODUCT_UPDATE_MUTATION = `
         id
         title
         handle
+        category {
+          id
+          fullName
+        }
         seo {
           title
           description

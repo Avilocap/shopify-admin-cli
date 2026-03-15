@@ -45,6 +45,10 @@ Use command help to confirm exact input, but these rules are important:
 
 - `products get|update|delete` accept a product GID or numeric product ID by default. Use `--handle` to treat the argument as a handle.
 - `products get --include-media` adds `descriptionHtml` and up to 10 product images with metadata. Without that flag, keep the response lightweight.
+- `products list|search --category` accept a taxonomy category GID or raw taxonomy category ID and map it to Shopify's `category_id` search filter.
+- `products create|update --category` accept a taxonomy category GID or raw taxonomy category ID.
+- `products update --clear-category` removes the current product category.
+- `products update --delete-conflicting-metafields` is only valid when the category is changing or being cleared.
 - `products create|update` accept optional `--seo-title` and `--seo-description` values that map to Shopify product SEO fields.
 - `orders get|transactions|cancel` accept an order GID or numeric order ID.
 - `customers get|orders` accept a customer GID or numeric customer ID.
@@ -76,6 +80,7 @@ Notes:
 
 - `orders cancel` is explicitly destructive and requires `--force`.
 - `products delete` also requires careful confirmation because it removes catalog data.
+- Product categories come from Shopify taxonomy and are assigned to products; the CLI does not create or edit taxonomy categories themselves.
 - `discounts create` requires exactly one of `--percentage` or `--amount`.
 - `inventory adjust --quantity` is a signed delta, not an absolute quantity.
 - Analytics commands are read-only and implemented on ShopifyQL.

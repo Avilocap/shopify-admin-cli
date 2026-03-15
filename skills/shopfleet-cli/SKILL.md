@@ -77,6 +77,7 @@ Prefer `--format table` when you want concise terminal inspection and `--format 
 - Default Shopify API version is pinned in code and can be overridden with `SHOPIFY_API_VERSION`.
 - Auth supports either `clientId` + `clientSecret` or legacy `accessToken`.
 - The CLI talks to Shopify Admin GraphQL and keeps analytics read-only through ShopifyQL.
+- Shopify taxonomy categories are read-only references from Shopify; product commands may assign, filter, or clear a product category, but they do not mutate the taxonomy itself.
 - The config layer normalizes domains and requires the Shopify admin domain in `*.myshopify.com` format.
 
 ## Editing Workflow
